@@ -5,11 +5,12 @@
 #include "imgui.h"
 #include "GL/glew.h"
 #include <stdint.h>
+#include <string>
 
 // Texture convert window and its contents
 class TextureConvert {
 public:
-	TextureConvert();
+	TextureConvert(int id);
 	~TextureConvert();
 
 	bool Move();
@@ -19,6 +20,7 @@ private:
 	bool LoadTextureFromFile();
 
 private:
+	std::string m_InternalName;
 	char m_InputName[1024 + 1];
 	char m_OutputName[1024 + 1];
 	uint8_t* m_pPixelData;

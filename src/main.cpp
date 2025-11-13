@@ -4,10 +4,8 @@
 #include "imgui_impl_opengl3.h"
 #include "GL/glew.h"
 #include "glfw/glfw3.h"
-#include <assert.h>
 
-#include "VTFLib.h"
-#include "TextureConvert.hpp"
+#include "RootWindow.hpp"
 
 int main() {
 
@@ -46,8 +44,7 @@ int main() {
 
 	// Initialize VTFLib
 	vlInitialize();
-	TextureConvert* texconv = new TextureConvert();
-
+	RootWindow root_window((float)winw, (float)winh);
 	while(!glfwWindowShouldClose(window)){
 		// Process messages
 		glfwPollEvents();
@@ -57,28 +54,9 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		
-		// Window itself
-		ImGui::SetNextWindowPos({0.0f, 0.0f});
-		ImGui::SetNextWindowSize({(float)winw, (float)winh});
-		ImGui::Begin("vtftool_root", nullptr,
-			       	ImGuiWindowFlags_NoCollapse |
-			       	ImGuiWindowFlags_NoResize |
-			       	ImGuiWindowFlags_NoMove |
-			       	ImGuiWindowFlags_MenuBar |
-			       	ImGuiWindowFlags_NoTitleBar |
-			       	ImGuiWindowFlags_NoBringToFrontOnFocus |
-				ImGuiWindowFlags_NoSavedSettings
-				);
-		if(texconv) {
-			if(!texconv->Move()) {
-				delete texconv;
-				texconv = nullptr;
-			}
-		}
+		// Move logic
+		root_window.Move();
 		
-		// End main window
-		ImGui::End();
-
 		// Render contents and draw
 		ImGui::Render();
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -87,8 +65,8 @@ int main() {
 		// Move the Swap Chain
 		glfwSwapBuffers(window);
 	}
-	if(texconv)
-	delete texconv;
+	//if(texconv)
+	//delete texconv;
 
 	// Terminate all
 	glfwDestroyWindow(window);

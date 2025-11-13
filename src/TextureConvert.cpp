@@ -2,7 +2,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-TextureConvert::TextureConvert() {
+TextureConvert::TextureConvert(int id) {
+	m_InternalName = "texture " + std::to_string(id); 
 	// Set STB to flip image
 	stbi_set_flip_vertically_on_load(false);
 	memset(&m_CreateOptions, 0x00, sizeof(SVTFCreateOptions));
@@ -43,7 +44,7 @@ TextureConvert::~TextureConvert() {
 bool TextureConvert::Move() {
 
 	bool is_open = true;
-	ImGui::Begin("texture", &is_open, ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Begin(m_InternalName.c_str(), &is_open, ImGuiWindowFlags_NoSavedSettings);
 		// Test some groupings
 		ImGui::BeginGroup();
 		//ImGui::Text("texture");
@@ -52,7 +53,10 @@ bool TextureConvert::Move() {
 		ImGui::SameLine();
 		if(ImGui::Button("Load texture")) {
 			printf("%s\n", m_InputName);
-			if(nullptr != m_pPixelData) stbi_image_free(m_pPixelData);
+			if(nullptr != m_pPixelData) {
+				stbi_image_free(m_pPixelData);
+				glDeleteTextures(1, &m_TextureID);
+			}
 			LoadTextureFromFile();
 			size_t size = strlen(m_InputName);
 			for(int i = size - 1; i > 0; i--){
