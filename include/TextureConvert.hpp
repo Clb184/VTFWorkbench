@@ -15,7 +15,7 @@ public:
 
 	bool Move();
 	bool ConvertToVTF(VTFImageFormat format);
-
+	void SetDelete();
 private:
 	bool LoadTextureFromFile();
 
@@ -23,6 +23,7 @@ private:
 	std::string m_InternalName;
 	char m_InputName[1024 + 1];
 	char m_OutputName[1024 + 1];
+	bool m_bAvoidFree;
 	uint8_t* m_pPixelData;
 	uint32_t m_Width;
 	uint32_t m_Height;

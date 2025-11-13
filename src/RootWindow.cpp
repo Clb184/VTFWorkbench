@@ -7,7 +7,11 @@ RootWindow::RootWindow(float width, float height)
 }
 
 RootWindow::~RootWindow() {
-
+	printf("Destroying Root Window contents\n");
+	printf("Destroying %d Texture Convert instances\n", m_CvtInstances.size());
+	for(auto& texconv : m_CvtInstances) {
+		texconv.SetDelete();
+	}
 }
 
 void RootWindow::Move() {
@@ -29,6 +33,10 @@ void RootWindow::Move() {
 	if(ImGui::MenuItem("Load Texture")) {
 		printf("Load texture\n");
 		m_CvtInstances.emplace_back(m_TexConvID);
+		printf("Added texconvert instance at %d with ID %d\n",
+			       	m_CvtInstances.size() -1,
+				m_TexConvID
+		      );
 		m_TexConvID++;
 	}
 	ImGui::EndMainMenuBar();
@@ -42,9 +50,11 @@ void RootWindow::Move() {
 }
 
 void RootWindow::MoveTexConvert() {
-	for (uint32_t i = 0; i < m_CvtInstances.size(); i++) {
+	for (int i = 0; i < m_CvtInstances.size(); i++) {
 		// Delete from list if closes
 		if(!m_CvtInstances[i].Move()) {
+			printf("Erasing CVT instance at %d\n", i);
+			m_CvtInstances[i].SetDelete();
 			m_CvtInstances.erase(m_CvtInstances.begin() + i);
 			i--;
 		}

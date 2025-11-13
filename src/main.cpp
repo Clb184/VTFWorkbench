@@ -44,7 +44,7 @@ int main() {
 
 	// Initialize VTFLib
 	vlInitialize();
-	RootWindow root_window((float)winw, (float)winh);
+	RootWindow* root_window = new RootWindow((float)winw, (float)winh);
 	while(!glfwWindowShouldClose(window)){
 		// Process messages
 		glfwPollEvents();
@@ -55,7 +55,7 @@ int main() {
 		ImGui::NewFrame();
 		
 		// Move logic
-		root_window.Move();
+		root_window->Move();
 		
 		// Render contents and draw
 		ImGui::Render();
@@ -66,7 +66,7 @@ int main() {
 		glfwSwapBuffers(window);
 	}
 	//if(texconv)
-	//delete texconv;
+	delete root_window;
 
 	// Terminate all
 	glfwDestroyWindow(window);

@@ -30,12 +30,14 @@ TextureConvert::TextureConvert(int id) {
 	memset(m_OutputName, 0x00, 1024 + 1);
 
 	m_pPixelData = nullptr;
+	m_bAvoidFree = true;
 	m_Width = 0;
 	m_Height = 0;
+	m_TextureID = 1;
 }
 
 TextureConvert::~TextureConvert() {
-	if(m_pPixelData) {
+	if(m_pPixelData && !m_bAvoidFree) {
 		stbi_image_free(m_pPixelData);
 		m_pPixelData = nullptr;
 	}
@@ -45,84 +47,93 @@ bool TextureConvert::Move() {
 
 	bool is_open = true;
 	ImGui::Begin(m_InternalName.c_str(), &is_open, ImGuiWindowFlags_NoSavedSettings);
-		// Test some groupings
-		ImGui::BeginGroup();
-		//ImGui::Text("texture");
-	       	//ImGui::SameLine();
-		ImGui::InputText("##input_image", m_InputName, 1024);
-		ImGui::SameLine();
-		if(ImGui::Button("Load texture")) {
-			printf("%s\n", m_InputName);
-			if(nullptr != m_pPixelData) {
-				stbi_image_free(m_pPixelData);
-				glDeleteTextures(1, &m_TextureID);
+	// Test some groupings
+	ImGui::BeginGroup();
+	ImGui::InputText("##input_image", m_InputName, 1024);
+	ImGui::SameLine();
+	if(ImGui::Button("Load texture")) {
+		printf("%s\n", m_InputName);
+		if(nullptr != m_pPixelData) {
+			stbi_image_free(m_pPixelData);
+			glDeleteTextures(1, &m_TextureID);
+		}
+		LoadTextureFromFile();
+		size_t size = strlen(m_InputName);
+		for(int i = size - 1; i > 0; i--){
+			if(m_InputName[i] == '.') {
+			memcpy(m_OutputName, m_InputName, i);
+			if(size < 1024 - 4) {
+				m_OutputName[i] = '.';
+				m_OutputName[i + 1] = 'v';
+				m_OutputName[i + 2] = 't';
+				m_OutputName[i + 3] = 'f';
 			}
-			LoadTextureFromFile();
-			size_t size = strlen(m_InputName);
-			for(int i = size - 1; i > 0; i--){
-				if(m_InputName[i] == '.') {
-				memcpy(m_OutputName, m_InputName, i);
-				if(size < 1024 - 4) {
-					m_OutputName[i] = '.';
-					m_OutputName[i + 1] = 'v';
-					m_OutputName[i + 2] = 't';
-					m_OutputName[i + 3] = 'f';
-				}
-				break;
-				}
+			break;
 			}
 		}
-		ImGui::InputText("##output_image", m_OutputName, 1024);
-		ImGui::SameLine();
-		if(ImGui::Button("Save file")){
-			if(nullptr != m_pPixelData) {
-				bool created = m_VTFFile.Create(m_Width, m_Height, m_pPixelData, m_CreateOptions);
-				if(created) {
-					printf("Converted to VTF\n");
-					m_VTFFile.Save(m_OutputName);
-					printf("Saving converted VTF file\n");
-				} else {
-					printf("Error converting file: %s\n", vlGetLastError());
-				}
+	}
+	ImGui::InputText("##output_image", m_OutputName, 1024);
+	ImGui::SameLine();
+	if(ImGui::Button("Save file")){
+		if(nullptr != m_pPixelData) {
+			bool created = m_VTFFile.Create(m_Width, m_Height, m_pPixelData, m_CreateOptions);
+			if(created) {
+				printf("Converted to VTF\n");
+				m_VTFFile.Save(m_OutputName);
+				printf("Saving converted VTF file\n");
 			} else {
-				printf("Attempted to save null data\n");
+				printf("Error converting file: %s\n", vlGetLastError());
 			}
+		} else {
+			printf("Attempted to save null data\n");
 		}
-		ImGui::EndGroup();
-		ImGui::Image(m_TextureID, {512.0f, 512.0f});
-		ImGui::SameLine();
+	}
+	ImGui::EndGroup();
 
-		ImGui::BeginGroup();
-		ImGui::CheckboxFlags("Point Sample", &m_CreateOptions.uiFlags, TEXTUREFLAGS_POINTSAMPLE);
-		ImGui::CheckboxFlags("Trilinear", &m_CreateOptions.uiFlags, TEXTUREFLAGS_TRILINEAR);
-		ImGui::CheckboxFlags("Clamp S", &m_CreateOptions.uiFlags, TEXTUREFLAGS_CLAMPS);
-		ImGui::CheckboxFlags("Clamp T", &m_CreateOptions.uiFlags, TEXTUREFLAGS_CLAMPT);
-		ImGui::CheckboxFlags("Anisotropic", &m_CreateOptions.uiFlags, TEXTUREFLAGS_ANISOTROPIC);
-		ImGui::CheckboxFlags("Hint DXT5", &m_CreateOptions.uiFlags, TEXTUREFLAGS_HINT_DXT5);
-		ImGui::CheckboxFlags("SRGB", &m_CreateOptions.uiFlags, TEXTUREFLAGS_SRGB);
-		ImGui::CheckboxFlags("Normal", &m_CreateOptions.uiFlags, TEXTUREFLAGS_NORMAL);
-		ImGui::CheckboxFlags("No MipMap", &m_CreateOptions.uiFlags, TEXTUREFLAGS_NOMIP);
-		ImGui::CheckboxFlags("No LoD", &m_CreateOptions.uiFlags, TEXTUREFLAGS_NOLOD);
-		ImGui::CheckboxFlags("Min MipMap", &m_CreateOptions.uiFlags, TEXTUREFLAGS_MINMIP);
-		ImGui::CheckboxFlags("Procedural", &m_CreateOptions.uiFlags, TEXTUREFLAGS_PROCEDURAL);
-		//ImGui::CheckboxFlags("One bit Alpha", &m_CreateOptions.uiFlags, TEXTUREFLAGS_ONEBITALPHA);
-		//ImGui::CheckboxFlags("Eight bit Alpha", &m_CreateOptions.uiFlags, TEXTUREFLAGS_EIGHTBITALPHA);
-		//ImGui::CheckboxFlags("Environemnt map", &m_CreateOptions.uiFlags, TEXTUREFLAGS_ENVMAP);
-		ImGui::CheckboxFlags("Render Target", &m_CreateOptions.uiFlags, TEXTUREFLAGS_RENDERTARGET);
-		ImGui::CheckboxFlags("Depth Render Target", &m_CreateOptions.uiFlags, TEXTUREFLAGS_DEPTHRENDERTARGET);
-		ImGui::CheckboxFlags("Single Copy", &m_CreateOptions.uiFlags, TEXTUREFLAGS_SINGLECOPY);
-		ImGui::CheckboxFlags("No Depth Buffer", &m_CreateOptions.uiFlags, TEXTUREFLAGS_NODEPTHBUFFER);
-		ImGui::CheckboxFlags("Clamp U", &m_CreateOptions.uiFlags, TEXTUREFLAGS_CLAMPU);
-		ImGui::CheckboxFlags("Vertex texture", &m_CreateOptions.uiFlags, TEXTUREFLAGS_VERTEXTEXTURE);
-		ImGui::CheckboxFlags("SS Bump", &m_CreateOptions.uiFlags, TEXTUREFLAGS_SSBUMP);
-		ImGui::CheckboxFlags("Border", &m_CreateOptions.uiFlags, TEXTUREFLAGS_BORDER);
-		ImGui::EndGroup();
+	ImGui::Image(m_TextureID, {256.0f, 256.0f});
+	ImGui::SameLine();
+	ImGui::BeginGroup();
+
+	ImGui::BeginGroup();
+	ImGui::CheckboxFlags("Point Sample", &m_CreateOptions.uiFlags, TEXTUREFLAGS_POINTSAMPLE);
+	ImGui::CheckboxFlags("Trilinear", &m_CreateOptions.uiFlags, TEXTUREFLAGS_TRILINEAR);
+	ImGui::CheckboxFlags("Clamp S", &m_CreateOptions.uiFlags, TEXTUREFLAGS_CLAMPS);
+	ImGui::CheckboxFlags("Clamp T", &m_CreateOptions.uiFlags, TEXTUREFLAGS_CLAMPT);
+	ImGui::CheckboxFlags("Anisotropic", &m_CreateOptions.uiFlags, TEXTUREFLAGS_ANISOTROPIC);
+	ImGui::CheckboxFlags("Hint DXT5", &m_CreateOptions.uiFlags, TEXTUREFLAGS_HINT_DXT5);
+	ImGui::CheckboxFlags("SRGB", &m_CreateOptions.uiFlags, TEXTUREFLAGS_SRGB);
+	ImGui::CheckboxFlags("Normal", &m_CreateOptions.uiFlags, TEXTUREFLAGS_NORMAL);
+	ImGui::CheckboxFlags("No MipMap", &m_CreateOptions.uiFlags, TEXTUREFLAGS_NOMIP);
+	ImGui::CheckboxFlags("No LoD", &m_CreateOptions.uiFlags, TEXTUREFLAGS_NOLOD);
+	ImGui::EndGroup();
+	ImGui::SameLine();
 		
-		ImGui::End();
-		if(!is_open) {
-			printf("closed window\n");
-		}
-		return is_open;
+	ImGui::BeginGroup();
+	ImGui::CheckboxFlags("Min MipMap", &m_CreateOptions.uiFlags, TEXTUREFLAGS_MINMIP);
+	ImGui::CheckboxFlags("Procedural", &m_CreateOptions.uiFlags, TEXTUREFLAGS_PROCEDURAL);
+	//ImGui::CheckboxFlags("One bit Alpha", &m_CreateOptions.uiFlags, TEXTUREFLAGS_ONEBITALPHA);
+	//ImGui::CheckboxFlags("Eight bit Alpha", &m_CreateOptions.uiFlags, TEXTUREFLAGS_EIGHTBITALPHA);
+	//ImGui::CheckboxFlags("Environemnt map", &m_CreateOptions.uiFlags, TEXTUREFLAGS_ENVMAP);
+	ImGui::CheckboxFlags("Render Target", &m_CreateOptions.uiFlags, TEXTUREFLAGS_RENDERTARGET);
+	ImGui::CheckboxFlags("Depth Render Target", &m_CreateOptions.uiFlags, TEXTUREFLAGS_DEPTHRENDERTARGET);
+	ImGui::CheckboxFlags("Single Copy", &m_CreateOptions.uiFlags, TEXTUREFLAGS_SINGLECOPY);
+	ImGui::CheckboxFlags("No Depth Buffer", &m_CreateOptions.uiFlags, TEXTUREFLAGS_NODEPTHBUFFER);
+	ImGui::CheckboxFlags("Clamp U", &m_CreateOptions.uiFlags, TEXTUREFLAGS_CLAMPU);
+	ImGui::CheckboxFlags("Vertex texture", &m_CreateOptions.uiFlags, TEXTUREFLAGS_VERTEXTEXTURE);
+	ImGui::CheckboxFlags("SS Bump", &m_CreateOptions.uiFlags, TEXTUREFLAGS_SSBUMP);
+	ImGui::CheckboxFlags("Border", &m_CreateOptions.uiFlags, TEXTUREFLAGS_BORDER);
+	ImGui::EndGroup();
+	ImGui::EndGroup();
+	
+	ImGui::End();
+	if(!is_open) {
+		printf("closed window\n");
+	}
+	return is_open;
+}
+
+void TextureConvert::SetDelete() {
+	m_bAvoidFree = false;
 }
 
 bool TextureConvert::LoadTextureFromFile() {
