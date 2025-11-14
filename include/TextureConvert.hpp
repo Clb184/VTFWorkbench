@@ -11,13 +11,17 @@
 class TextureConvert {
 public:
 	TextureConvert(int id);
+	TextureConvert(int id, const char* filename);
 	~TextureConvert();
 
 	bool Move();
 	bool ConvertToVTF(VTFImageFormat format);
 	void SetDelete();
 private:
-	bool LoadTextureFromFile();
+	bool LoadTextureFromFile(const char* filename);
+#ifdef WIN32
+	void OpenDialogWindows(char* buffer, size_t size);
+#endif
 
 private:
 	std::string m_InternalName;

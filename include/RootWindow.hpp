@@ -13,6 +13,9 @@ public:
 
 private:
 	void MoveTexConvert();
+#ifdef WIN32
+	void OpenTextureDialogWindows();
+#endif
 
 private:
 	float m_Width;
