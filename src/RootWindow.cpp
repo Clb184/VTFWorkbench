@@ -2,6 +2,7 @@
 #include "imgui_stdlib.h"
 #include "Helper.hpp"
 
+std::string RootWindow::m_BasePath;
 std::string RootWindow::m_MaterialPath;
 
 RootWindow::RootWindow(float width, float height) 
@@ -45,7 +46,7 @@ void RootWindow::Move() {
 	
 	// Window with the paths
 	if(!m_bOpenFirstTime) { 
-		ImGui::SetNextWindowSize({256.0f, 96.0f}); 
+		ImGui::SetNextWindowSize({384.0f, 100.0f}); 
 		m_bOpenFirstTime = true;
 	}
 	MoveBaseVars();
@@ -58,19 +59,29 @@ void RootWindow::Move() {
 
 }
 
+const std::filesystem::path RootWindow::GetBasePath() {
+	NormalizeString(&m_BasePath);
+	return m_BasePath;
+}
+
 const std::filesystem::path RootWindow::GetMaterialPath() {
+	NormalizeString(&m_BasePath);
 	return m_MaterialPath;
 }
 
 void RootWindow::MoveBaseVars() {
 	ImGui::Begin("##Paths", nullptr, ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Text("Base path    ");
+	ImGui::SameLine();
+	ImGui::InputText("##base_path", &m_BasePath);
 	ImGui::Text("Material path");
 	ImGui::SameLine();
-	ImGui::InputText("##input_path", &m_MaterialPath);
+	ImGui::InputText("##material_path", &m_MaterialPath);
 	if(ImGui::Button("Convert materials")) {
+		NormalizeString(&m_BasePath);
 		NormalizeString(&m_MaterialPath);
 		for(auto& cvt : m_CvtInstances){
-			cvt.SaveFile(m_MaterialPath);
+			cvt.SaveFile(std::filesystem::path(m_BasePath) / std::filesystem::path(m_MaterialPath));
 		}
 	}
 	ImGui::End();

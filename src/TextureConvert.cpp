@@ -134,7 +134,7 @@ bool TextureConvert::Move() {
 	ImGui::InputText("##output_image", &m_OutputName);
 	ImGui::SameLine();
 	if(ImGui::Button("Save file")){
-		SaveFile(RootWindow::GetMaterialPath());
+		SaveFile(RootWindow::GetBasePath() / RootWindow::GetMaterialPath());
 	}
 	ImGui::EndGroup();
 
@@ -212,7 +212,7 @@ void TextureConvert::SaveFile(const std::filesystem::path& base_path) {
 			if(parent.string() != ""){
 				if(!std::filesystem::exists(parent)){
 					printf("Path %s doesn't exist, creating it\n", path.parent_path().string().c_str());
-					std::filesystem::create_directory(path.parent_path());
+					std::filesystem::create_directories(path.parent_path());
 				}
 			}
 			if(m_VTFFile.Save(path.string().c_str())) {

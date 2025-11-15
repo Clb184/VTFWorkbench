@@ -11,6 +11,7 @@ public:
 	~RootWindow();
 
 	void Move();
+	static const std::filesystem::path GetBasePath();
 	static const std::filesystem::path GetMaterialPath();
 private:
 	void MoveBaseVars();
@@ -25,6 +26,7 @@ private:
 	float m_Height;
 	int m_TexConvID;
 	std::vector<TextureConvert> m_CvtInstances;
+	static std::string m_BasePath;
 	static std::string m_MaterialPath;
 };
 
