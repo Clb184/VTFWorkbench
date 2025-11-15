@@ -178,6 +178,7 @@ bool TextureConvert::Move() {
 	       	"ARGB 8888", "BGRA 8888", "DXT1", "DXT3", "DXT5"
        	};
 	//bool in_combo = ImGui::BeginCombo("Format", ID2Str(m_TextureFormat));
+	ImGui::SetNextItemWidth(96.0f);
 	ImGui::Combo("Format", &m_TextureFormat, format_names, 10);
 	/*for(int i = 0; i < 10; i++){
 		ImGui::BeginChild(ID2Str(i));
