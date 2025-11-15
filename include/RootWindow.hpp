@@ -2,6 +2,8 @@
 #define ROOTWINDOW_INCLUDED
 
 #include "TextureConvert.hpp"
+#include "MaterialConstructor.hpp"
+
 #include <vector>
 #include <filesystem>
 
@@ -16,16 +18,23 @@ public:
 private:
 	void MoveBaseVars();
 	void MoveTexConvert();
+	void MoveMaterialConstructors();
+
 #ifdef WIN32
 	void OpenTextureDialogWindows();
 #endif
+
+	void CreateMaterialConstructor();
+	void LoadMaterialPreset();
 
 private:
 	bool m_bOpenFirstTime;
 	float m_Width;
 	float m_Height;
 	int m_TexConvID;
+	int m_MatConstID;
 	std::vector<TextureConvert> m_CvtInstances;
+	std::vector<MaterialConstructor> m_MatCInstances;
 	static std::string m_BasePath;
 	static std::string m_MaterialPath;
 };

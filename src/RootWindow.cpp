@@ -9,15 +9,22 @@ RootWindow::RootWindow(float width, float height)
 	: m_Width(width), m_Height(height) 
 {
 	m_TexConvID = 0;
+	m_MatConstID = 0;
 	//memset(m_MaterialPath, 0, 1024 + 4);
 	m_bOpenFirstTime = false;
 }
 
 RootWindow::~RootWindow() {
 	printf("Destroying Root Window contents\n");
+
 	printf("Destroying %d Texture Convert instances\n", m_CvtInstances.size());
 	for(auto& texconv : m_CvtInstances) {
 		texconv.SetDelete();
+	}
+
+	printf("Destroying %d Material Constructor instances\n", m_MatCInstances.size());
+	for(auto& matc : m_MatCInstances) {
+
 	}
 }
 
@@ -42,17 +49,25 @@ void RootWindow::Move() {
 		OpenTextureDialogWindows();
 #endif
 	}
+	if(ImGui::MenuItem("Create Material")) {
+		CreateMaterialConstructor();
+	}
 	ImGui::EndMainMenuBar();
 	
 	// Window with the paths
 	if(!m_bOpenFirstTime) { 
-		ImGui::SetNextWindowSize({384.0f, 100.0f}); 
+		//ImGui::SetNextWindowSize({384.0f, 100.0f}); 
 		m_bOpenFirstTime = true;
 	}
+
+	// Move base paths window
 	MoveBaseVars();
 
 	// Texture convert
 	MoveTexConvert();
+
+	// Move the material constructor
+	MoveMaterialConstructors();
 
 	// End main window
 	ImGui::End();
@@ -71,12 +86,21 @@ const std::filesystem::path RootWindow::GetMaterialPath() {
 
 void RootWindow::MoveBaseVars() {
 	ImGui::Begin("##Paths", nullptr, ImGuiWindowFlags_NoSavedSettings);
+
+	ImGui::BeginGroup();
 	ImGui::Text("Base path    ");
 	ImGui::SameLine();
+	ImGui::SetNextItemWidth(300.0f);
 	ImGui::InputText("##base_path", &m_BasePath);
+	ImGui::EndGroup();
+
+	ImGui::BeginGroup();
 	ImGui::Text("Material path");
 	ImGui::SameLine();
+	ImGui::SetNextItemWidth(300.0f);
 	ImGui::InputText("##material_path", &m_MaterialPath);
+	ImGui::EndGroup();
+
 	if(ImGui::Button("Convert materials")) {
 		NormalizeString(&m_BasePath);
 		NormalizeString(&m_MaterialPath);
@@ -98,6 +122,19 @@ void RootWindow::MoveTexConvert() {
 		}
 	}
 }
+
+void RootWindow::MoveMaterialConstructors() {
+	for (int i = 0; i < m_MatCInstances.size(); i++) {
+		// Delete from list if closes
+		if(!m_MatCInstances[i].Move()) {
+			printf("Erasing MATC instance at %d\n", i);
+			//m_MatcInstances[i].SetDelete();
+			m_MatCInstances.erase(m_MatCInstances.begin() + i);
+			i--;
+		}
+	}	
+}
+
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -175,6 +212,16 @@ void RootWindow::OpenTextureDialogWindows() {
 		}
 		CoUninitialize();
 	}  
+}
+
+void RootWindow::CreateMaterialConstructor(){
+	printf("Create Material Constructor\n");
+	m_MatCInstances.emplace_back(m_MatConstID);
+	m_MatConstID++;
+}
+
+void RootWindow::LoadMaterialPreset() {
+	
 }
 
 #endif

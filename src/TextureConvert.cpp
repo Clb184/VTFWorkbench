@@ -171,7 +171,8 @@ bool TextureConvert::Move() {
 	ImGui::CheckboxFlags("SS Bump", &m_CreateOptions.uiFlags, TEXTUREFLAGS_SSBUMP);
 	ImGui::CheckboxFlags("Border", &m_CreateOptions.uiFlags, TEXTUREFLAGS_BORDER);
 	ImGui::EndGroup();
-	ImGui::EndGroup();
+	
+	// For texture formats	
 	const char* format_names[] = {
 	       	"RGBA 8888", "ABGR 8888", "RGB 888", "BGR 888", "RGB 565",
 	       	"ARGB 8888", "BGRA 8888", "DXT1", "DXT3", "DXT5"
@@ -185,6 +186,8 @@ bool TextureConvert::Move() {
 	
 	//if(in_combo) ImGui::EndCombo();
 
+	ImGui::EndGroup();
+	
 	ImGui::End();
 	if(!is_open) {
 		printf("closed window\n");
@@ -204,7 +207,7 @@ void TextureConvert::SaveFile(const std::filesystem::path& base_path) {
 		bool created = m_VTFFile.Create(m_Width, m_Height, m_pPixelData, m_CreateOptions);
 		if(created) {
 			printf("Converted to VTF (Format: %d)\n", ID2Format(m_TextureFormat));
-			std::filesystem::path path = base_path / std::string(m_OutputName);
+			std::filesystem::path path = base_path / (m_OutputName + ".vtf");
 			std::filesystem::path parent = path.parent_path();
 			printf("Path is: %s\n", path.string().c_str());
 			printf("Parent directory is %s\n", parent.string().c_str());
@@ -262,7 +265,6 @@ bool TextureConvert::LoadTextureFromFile(const char* filename) {
 			for(int c = start; c < i; c++){
 				m_OutputName.push_back(filename[c]);
 			}
-			m_OutputName += ".vtf";
 			break;
 		}
 	}
