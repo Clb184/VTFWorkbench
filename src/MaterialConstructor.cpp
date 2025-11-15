@@ -10,6 +10,27 @@ MaterialConstructor::~MaterialConstructor() {
 
 }
 
+std::string MaterialConstructor::CreateMaterial(const std::string& texture_name) {
+	std::string ret;
+	ret = "\"VertexLitGeneric\" {\n";
+	for(auto& node : m_Nodes){
+		ret += "$" + node.name + "\"";
+		switch(node.type){
+			case NODE_INTEGER: ret += std::to_string(node.integer); break;
+			case NODE_FLOAT: ret += std::to_string(node.single); break;
+			case NODE_FLOAT2: ret += "[" + std::to_string(node.float4[0]) + " " + std::to_string(node.float4[1]) + "]"; break;
+			case NODE_FLOAT3: ret += "[" + std::to_string(node.float4[0]) + " " + std::to_string(node.float4[1])  + " " + std::to_string(node.float4[2]) + "]"; break;
+			case NODE_FLOAT4: ret += "[" + std::to_string(node.float4[0]) + " " + std::to_string(node.float4[1])  + " " + std::to_string(node.float4[2]) + " " + std::to_string(node.float4[3]) + "]"; break;
+			case NODE_COLOR: ret += "[" + std::to_string(node.float4[0]) + " " + std::to_string(node.float4[1])  + " " + std::to_string(node.float4[2]) + " " + std::to_string(node.float4[3]) + "]"; break;
+			case NODE_STRING: ret += std::to_string(node.integer); break;
+		}
+		ret += "\"\n";
+	}
+	ret += "}";
+	printf("Material generated:\n%s\n", ret.c_str());
+	return ret;
+}
+
 bool MaterialConstructor::Move() {
 	bool is_open = true;
 	ImGui::Begin(m_InternalName.c_str(), &is_open, ImGuiWindowFlags_NoSavedSettings);

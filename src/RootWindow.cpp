@@ -145,13 +145,34 @@ void RootWindow::MoveMaterialOutputs() {
 	}
 	ImGui::BeginGroup();
 	for(int i = 0; i < m_OutputsList.size(); i++) {
+		ImGui::BeginGroup();
 		std::string id = "##out_name" + std::to_string(i);
+		std::string del_this = "Remove##del_" + std::to_string(i);
+		std::string save_this = "Save##sav_" + std::to_string(i);
 		ImGui::SetNextItemWidth(100.0f);
 		ImGui::InputText(id.c_str(), &m_OutputsList[i].name);
 		ImGui::SameLine();
+
+		// Texture select
 		ImGui::Text("Texture id");
 		ImGui::SameLine();
+
+		// Material template select
 		ImGui::Text("Material temp");
+		ImGui::SameLine();
+		// Remove material from list
+		if(ImGui::Button(del_this.c_str())) {
+			m_OutputsList.erase(m_OutputsList.begin() + i);
+			i--;
+			ImGui::EndGroup();
+			continue;
+		}
+		ImGui::SameLine();
+		// Save	material
+		if(ImGui::Button(save_this.c_str())){
+			printf("Saving material\n");
+		}
+		ImGui::EndGroup();
 	}
 	ImGui::EndGroup();
 	ImGui::End();

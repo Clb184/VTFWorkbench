@@ -42,6 +42,8 @@ public:
 	~MaterialConstructor();
 
 	bool Move();
+	std::string CreateMaterial(const std::string& texture_name);
+
 private:
 	void DrawAddButtons();
 	void DrawNodeValues();
@@ -49,7 +51,6 @@ private:
 private:
 	std::string m_InternalName;
 	std::string m_ShaderType;
-	VTFLib::CVMTFile m_VMTFile;
 	VTFLib::Nodes::CVMTGroupNode* m_pNodes;
 	std::vector<value_node_t> m_Nodes;
 };
