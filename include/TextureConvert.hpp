@@ -28,11 +28,12 @@ private:
 private:
 	std::string m_InternalName;
 	char m_InputName[1024 + 1];
-	char m_OutputName[1024 + 1];
+	std::string m_OutputName;
 	bool m_bAvoidFree;
 	uint8_t* m_pPixelData;
 	uint32_t m_Width;
 	uint32_t m_Height;
+	int m_TextureFormat;
 	GLuint m_TextureID;
 	VTFLib::CVTFFile m_VTFFile;
 	SVTFCreateOptions m_CreateOptions;

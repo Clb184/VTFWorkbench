@@ -2,6 +2,39 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "RootWindow.hpp"
+#include "imgui_stdlib.h"
+#include "Helper.hpp"
+
+VTFImageFormat ID2Format(int id) {
+	switch(id) {
+		case 0: return IMAGE_FORMAT_RGBA8888;
+		case 1: return IMAGE_FORMAT_ABGR8888;
+		case 2: return IMAGE_FORMAT_RGB888;
+		case 3: return IMAGE_FORMAT_BGR888;
+		case 4: return IMAGE_FORMAT_RGB565;
+		case 5: return IMAGE_FORMAT_ARGB8888;
+		case 6: return IMAGE_FORMAT_BGRA8888;
+		case 7: return IMAGE_FORMAT_DXT1;
+		case 8: return IMAGE_FORMAT_DXT3;
+		default: case 9: return IMAGE_FORMAT_DXT5;
+	}
+}
+
+const char* ID2Str(int id) {
+	switch(id) {
+		case IMAGE_FORMAT_RGBA8888: return "RGBA 8888";
+		case IMAGE_FORMAT_ABGR8888: return "ABGR 8888";
+		case IMAGE_FORMAT_RGB888: return "RGB 888";
+		case IMAGE_FORMAT_BGR888: return "BGR 888";
+		case IMAGE_FORMAT_RGB565: return "RGB 565";
+		case IMAGE_FORMAT_ARGB8888: return "ARGB 8888";
+		case IMAGE_FORMAT_BGRA8888: return "BGRA 8888";
+		case IMAGE_FORMAT_DXT1: return "DXT1";
+		case IMAGE_FORMAT_DXT3: return "DXT3";
+		case IMAGE_FORMAT_DXT5: return "DXT5";
+		default: return "Unknown";
+	}
+}
 
 TextureConvert::TextureConvert(int id) {
 	m_InternalName = "texture " + std::to_string(id); 
@@ -28,13 +61,14 @@ TextureConvert::TextureConvert(int id) {
 	m_CreateOptions.uiResizeClampHeight = 8192;
 
 	memset(m_InputName, 0x00, 1024 + 1);
-	memset(m_OutputName, 0x00, 1024 + 1);
+	//memset(m_OutputName, 0x00, 1024 + 1);
 
 	m_pPixelData = nullptr;
 	m_bAvoidFree = true;
 	m_Width = 0;
 	m_Height = 0;
 	m_TextureID = -1;
+	m_TextureFormat = 8; 
 }
 
 TextureConvert::TextureConvert(int id, const char* filename) {
@@ -63,9 +97,10 @@ TextureConvert::TextureConvert(int id, const char* filename) {
 	
 	printf("Load texture on constructor received: %s\n", filename);
 	memset(m_InputName, 0x00, 1024 + 1);
-	memset(m_OutputName, 0x00, 1024 + 1);
+	//memset(m_OutputName, 0x00, 1024 + 1);
 	LoadTextureFromFile(filename);
 	m_bAvoidFree = true;
+	m_TextureFormat = 9; 
 }
 
 TextureConvert::~TextureConvert() {
@@ -96,7 +131,7 @@ bool TextureConvert::Move() {
 	}
 	ImGui::SameLine();
 	ImGui::Text(m_InputName);
-	ImGui::InputText("##output_image", m_OutputName, 1024);
+	ImGui::InputText("##output_image", &m_OutputName);
 	ImGui::SameLine();
 	if(ImGui::Button("Save file")){
 		SaveFile(RootWindow::GetMaterialPath());
@@ -137,7 +172,19 @@ bool TextureConvert::Move() {
 	ImGui::CheckboxFlags("Border", &m_CreateOptions.uiFlags, TEXTUREFLAGS_BORDER);
 	ImGui::EndGroup();
 	ImGui::EndGroup();
+	const char* format_names[] = {
+	       	"RGBA 8888", "ABGR 8888", "RGB 888", "BGR 888", "RGB 565",
+	       	"ARGB 8888", "BGRA 8888", "DXT1", "DXT3", "DXT5"
+       	};
+	//bool in_combo = ImGui::BeginCombo("Format", ID2Str(m_TextureFormat));
+	ImGui::Combo("Format", &m_TextureFormat, format_names, 10);
+	/*for(int i = 0; i < 10; i++){
+		ImGui::BeginChild(ID2Str(i));
+		ImGui::EndChild();
+	}*/
 	
+	//if(in_combo) ImGui::EndCombo();
+
 	ImGui::End();
 	if(!is_open) {
 		printf("closed window\n");
@@ -151,16 +198,22 @@ void TextureConvert::SetDelete() {
 
 void TextureConvert::SaveFile(const std::filesystem::path& base_path) {
 	if(nullptr != m_pPixelData) {
+		NormalizeString(&m_OutputName);
+		if(m_OutputName == "") return;
+		m_CreateOptions.ImageFormat = ID2Format(m_TextureFormat);
 		bool created = m_VTFFile.Create(m_Width, m_Height, m_pPixelData, m_CreateOptions);
 		if(created) {
-			printf("Converted to VTF\n");
+			printf("Converted to VTF (Format: %d)\n", ID2Format(m_TextureFormat));
 			std::filesystem::path path = base_path / std::string(m_OutputName);
+			std::filesystem::path parent = path.parent_path();
 			printf("Path is: %s\n", path.string().c_str());
-			printf("Parent directory is %s\n", path.parent_path().string().c_str());
+			printf("Parent directory is %s\n", parent.string().c_str());
 			printf("Filename is %s\n", path.filename().string().c_str());
-			if(!std::filesystem::exists(path.parent_path())){
-				printf("Path %s doesn't exist, creating it\n", path.parent_path().string().c_str());
-				std::filesystem::create_directory(path.parent_path());
+			if(parent.string() != ""){
+				if(!std::filesystem::exists(parent)){
+					printf("Path %s doesn't exist, creating it\n", path.parent_path().string().c_str());
+					std::filesystem::create_directory(path.parent_path());
+				}
 			}
 			if(m_VTFFile.Save(path.string().c_str())) {
 				printf("Saving converted VTF file\n");
@@ -206,14 +259,11 @@ bool TextureConvert::LoadTextureFromFile(const char* filename) {
 	}
 	for(int i = size - 1; i > start; i--) {
 		if(filename[i] == '.') {
-		memcpy(m_OutputName, filename + start, i - start);
-		if(size < 1024 - 4) {
-			m_OutputName[i - start] = '.';
-			m_OutputName[i - start + 1] = 'v';
-			m_OutputName[i - start + 2] = 't';
-			m_OutputName[i - start + 3] = 'f';
-		}
-		break;
+			for(int c = start; c < i; c++){
+				m_OutputName.push_back(filename[c]);
+			}
+			m_OutputName += ".vtf";
+			break;
 		}
 	}
 	memcpy(m_InputName, filename, size);

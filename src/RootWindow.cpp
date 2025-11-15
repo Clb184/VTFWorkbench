@@ -1,5 +1,6 @@
 #include "RootWindow.hpp"
 #include "imgui_stdlib.h"
+#include "Helper.hpp"
 
 std::string RootWindow::m_MaterialPath;
 
@@ -67,6 +68,7 @@ void RootWindow::MoveBaseVars() {
 	ImGui::SameLine();
 	ImGui::InputText("##input_path", &m_MaterialPath);
 	if(ImGui::Button("Convert materials")) {
+		NormalizeString(&m_MaterialPath);
 		for(auto& cvt : m_CvtInstances){
 			cvt.SaveFile(m_MaterialPath);
 		}
