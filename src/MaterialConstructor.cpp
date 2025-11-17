@@ -1,8 +1,10 @@
 #include "MaterialConstructor.hpp"
 #include "imgui_stdlib.h"
+#include "Helper.hpp"
 
 MaterialConstructor::MaterialConstructor(int id) {
 	m_InternalName = "material " + std::to_string(id);
+	m_MaterialName = "Material " + std::to_string(id);
 	m_pNodes = nullptr;
 }
 
@@ -10,11 +12,16 @@ MaterialConstructor::~MaterialConstructor() {
 
 }
 
-std::string MaterialConstructor::CreateMaterial(const std::string& texture_name) {
+void MaterialConstructor::CreateMaterial(const std::string& texture_name) {
 	std::string ret;
 	ret = "\"VertexLitGeneric\" {\n";
+	if(texture_name != "<null>") {
+		ret += "\t$basetexture \"" + texture_name + "\"\n";
+	}
 	for(auto& node : m_Nodes){
-		ret += "$" + node.name + "\"";
+		NormalizeString(&node.name);
+		if(node.name == "") continue;
+		ret += "\t$" + node.name + "\t\"";
 		switch(node.type){
 			case NODE_INTEGER: ret += std::to_string(node.integer); break;
 			case NODE_FLOAT: ret += std::to_string(node.single); break;
@@ -28,14 +35,22 @@ std::string MaterialConstructor::CreateMaterial(const std::string& texture_name)
 	}
 	ret += "}";
 	printf("Material generated:\n%s\n", ret.c_str());
-	return ret;
+	VTFLib::CVMTFile vmt;
+	if(vmt.Create(ret.c_str())) {
+		printf("Created VMT\n");
+	}
+	else {
+		printf("Failed creating VMT\n");
+	}
+
+	return;
 }
 
 bool MaterialConstructor::Move() {
 	bool is_open = true;
 	ImGui::Begin(m_InternalName.c_str(), &is_open, ImGuiWindowFlags_NoSavedSettings);
 
-
+	ImGui::InputText("Name", &m_MaterialName);
 	DrawAddButtons();
 	DrawNodeValues();
 	ImGui::End();
@@ -43,6 +58,10 @@ bool MaterialConstructor::Move() {
 		printf("Closing Material Constructor window\n");
 	}
 	return is_open;
+}
+
+const std::string MaterialConstructor::GetMaterialName() const {
+	return m_MaterialName;	
 }
 
 void MaterialConstructor::DrawAddButtons() {

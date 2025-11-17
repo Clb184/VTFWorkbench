@@ -54,14 +54,14 @@ void RootWindow::Move() {
 	}
 	ImGui::EndMainMenuBar();
 	
-	// Window with the paths
-	if(!m_bOpenFirstTime) { 
-		//ImGui::SetNextWindowSize({384.0f, 100.0f}); 
-		m_bOpenFirstTime = true;
-	}
-
 	// Move base paths window
 	MoveBaseVars();
+
+	// Window with the outputs at first init
+	if(!m_bOpenFirstTime) { 
+		ImGui::SetNextWindowSize({500.0f, 100.0f}); 
+		m_bOpenFirstTime = true;
+	}
 
 	// Material outputs and that
 	MoveMaterialOutputs();
@@ -88,7 +88,11 @@ const std::filesystem::path RootWindow::GetMaterialPath() {
 }
 
 void RootWindow::MoveBaseVars() {
-	ImGui::Begin("##Paths", nullptr, ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Begin("Paths", nullptr,
+		       	ImGuiWindowFlags_NoSavedSettings |
+		       	ImGuiWindowFlags_NoCollapse |
+			ImGuiWindowFlags_NoResize
+		    );
 
 	ImGui::BeginGroup();
 	ImGui::Text("Base path    ");
@@ -121,6 +125,7 @@ void RootWindow::MoveTexConvert() {
 			printf("Erasing CVT instance at %d\n", i);
 			m_CvtInstances[i].SetDelete();
 			m_CvtInstances.erase(m_CvtInstances.begin() + i);
+			RemoveTextureFromOutputs(i + 1);
 			i--;
 		}
 	}
@@ -133,19 +138,24 @@ void RootWindow::MoveMaterialConstructors() {
 			printf("Erasing MATC instance at %d\n", i);
 			//m_MatcInstances[i].SetDelete();
 			m_MatCInstances.erase(m_MatCInstances.begin() + i);
+			RemoveMaterialFromOutputs(i);
 			i--;
 		}
 	}	
 }
 
 void RootWindow::MoveMaterialOutputs() {
-	ImGui::Begin("Material Outputs", nullptr, ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Begin("Material Outputs", nullptr, 
+			ImGuiWindowFlags_NoSavedSettings |
+			ImGuiWindowFlags_NoCollapse
+			);
 	if(ImGui::Button("Add output")) {
 		m_OutputsList.emplace_back();
 	}
 	ImGui::BeginGroup();
 	for(int i = 0; i < m_OutputsList.size(); i++) {
 		ImGui::BeginGroup();
+		char buff[64] = "";
 		std::string id = "##out_name" + std::to_string(i);
 		std::string del_this = "Remove##del_" + std::to_string(i);
 		std::string save_this = "Save##sav_" + std::to_string(i);
@@ -154,11 +164,39 @@ void RootWindow::MoveMaterialOutputs() {
 		ImGui::SameLine();
 
 		// Texture select
-		ImGui::Text("Texture id");
+		ImGui::SetNextItemWidth(96.0f);
+		std::string texture = m_OutputsList[i].base_texture > 0 ? m_CvtInstances[m_OutputsList[i].base_texture - 1].GetTextureName() : "<null>";
+		sprintf(buff, "Tex##%d", i);
+		if(ImGui::BeginCombo(buff, texture.c_str())) {
+			bool selected = m_OutputsList[i].base_texture == 0;
+			sprintf(buff, "<null>#%d", i);
+			if(ImGui::Selectable("<null>##", selected)) {
+				m_OutputsList[i].base_texture == 0;
+			}
+			for(int j = 0; j < m_CvtInstances.size(); j++){
+				selected = (m_OutputsList[i].base_texture - 1) == j;
+				if(ImGui::Selectable(std::string(m_CvtInstances[j].GetTextureName() + "##" + std::to_string(i)).c_str(), selected)){
+					m_OutputsList[i].base_texture = j + 1;
+				}
+			}
+			ImGui::EndCombo();
+		}
+		//ImGui::Text("Texture id");
 		ImGui::SameLine();
 
 		// Material template select
-		ImGui::Text("Material temp");
+		ImGui::SetNextItemWidth(96.0f);
+		sprintf(buff, "Mat##%d", i);
+		if(ImGui::BeginCombo(buff, m_MatCInstances.size() > 0 ? m_MatCInstances[m_OutputsList[i].template_material].GetMaterialName().c_str() : "<null>")) {
+			for(int j = 0; j < m_MatCInstances.size(); j++){
+				bool selected = (m_OutputsList[i].template_material) == j;
+				if(ImGui::Selectable(std::string(m_MatCInstances[j].GetMaterialName() + "##" + std::to_string(i)).c_str(), selected)){
+					m_OutputsList[i].template_material = j;
+				}
+			}
+			ImGui::EndCombo();
+		}
+		//ImGui::Text("Material temp");
 		ImGui::SameLine();
 		// Remove material from list
 		if(ImGui::Button(del_this.c_str())) {
@@ -171,6 +209,9 @@ void RootWindow::MoveMaterialOutputs() {
 		// Save	material
 		if(ImGui::Button(save_this.c_str())){
 			printf("Saving material\n");
+			if(m_MatCInstances.size() > 0){
+				m_MatCInstances[m_OutputsList[i].template_material].CreateMaterial(texture);
+			}
 		}
 		ImGui::EndGroup();
 	}
@@ -260,6 +301,7 @@ void RootWindow::OpenTextureDialogWindows() {
 void RootWindow::CreateMaterialConstructor(){
 	printf("Create Material Constructor\n");
 	m_MatCInstances.emplace_back(m_MatConstID);
+	printf("Created MATC instance with ID %d\n", m_MatConstID);
 	m_MatConstID++;
 }
 
@@ -267,4 +309,15 @@ void RootWindow::LoadMaterialPreset() {
 	
 }
 
+void RootWindow::RemoveTextureFromOutputs(int id) {
+	for(auto& o : m_OutputsList) {
+		o.base_texture -= (o.base_texture >= id);
+	}
+}
+
+void RootWindow::RemoveMaterialFromOutputs(int id) {
+	for(auto& o : m_OutputsList) {
+		o.template_material -= (o.template_material >= id);
+	}
+}
 #endif

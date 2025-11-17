@@ -9,8 +9,8 @@
 
 struct output_vmt_t {
 	std::string name;
-	int base_texture;
-	int template_material;
+	int base_texture = 0;
+	int template_material = 0;
 };
 
 class RootWindow {
@@ -33,7 +33,9 @@ private:
 
 	void CreateMaterialConstructor();
 	void LoadMaterialPreset();
-
+	
+	void RemoveTextureFromOutputs(int id);
+	void RemoveMaterialFromOutputs(int id);
 
 private:
 	bool m_bOpenFirstTime;

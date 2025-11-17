@@ -232,6 +232,10 @@ void TextureConvert::SaveFile(const std::filesystem::path& base_path) {
 	}
 }
 
+const std::string TextureConvert::GetTextureName() const {
+	return m_OutputName;
+}
+
 bool TextureConvert::LoadTextureFromFile(const char* filename) {
 	int channel = 0;
 	int w = 0, h = 0;
