@@ -60,9 +60,6 @@ TextureConvert::TextureConvert(int id) {
 	m_CreateOptions.uiResizeClampWidth = 8192;
 	m_CreateOptions.uiResizeClampHeight = 8192;
 
-	memset(m_InputName, 0x00, 1024 + 1);
-	//memset(m_OutputName, 0x00, 1024 + 1);
-
 	m_pPixelData = nullptr;
 	m_bAvoidFree = true;
 	m_Width = 0;
@@ -96,8 +93,6 @@ TextureConvert::TextureConvert(int id, const char* filename) {
 	m_CreateOptions.uiResizeClampHeight = 8192;
 	
 	printf("Load texture on constructor received: %s\n", filename);
-	memset(m_InputName, 0x00, 1024 + 1);
-	//memset(m_OutputName, 0x00, 1024 + 1);
 	LoadTextureFromFile(filename);
 	m_bAvoidFree = true;
 	m_TextureFormat = 9; 
@@ -117,27 +112,26 @@ bool TextureConvert::Move() {
 	// Test some groupings
 	ImGui::BeginGroup();
 	if(ImGui::Button("Load texture")) {
+		bool on_success = false;
 #ifdef WIN32
-		memset(m_InputName, 0x00, 1024 + 1);
-		std::string input;
 		COMDLG_FILTERSPEC filter;
 		filter.pszName = L"Image files";
 		filter.pszSpec = L"*.png; *.jpg; *.tga; *.bmp";
 
-		CreateSingleSelectDialogWindows(&filter, 1, &input);
-		memcpy(m_InputName, input.data(), input.length());
-		//OpenDialogWindows(m_InputName, 1024);
+		on_success = CreateSingleSelectDialogWindows(&filter, 1, &m_InputName);
 #endif
-		printf("%s\n", m_InputName);
-		if(nullptr != m_pPixelData) {
-			stbi_image_free(m_pPixelData);
-			glDeleteTextures(1, &m_TextureID);
+		if(on_success) {
+			printf("Loading %s\n", m_InputName.c_str());
+			if(nullptr != m_pPixelData) {
+				stbi_image_free(m_pPixelData);
+				glDeleteTextures(1, &m_TextureID);
+			}
+			LoadTextureFromFile(m_InputName.c_str());
 		}
-		LoadTextureFromFile(m_InputName);
 		
 	}
 	ImGui::SameLine();
-	ImGui::Text(m_InputName);
+	ImGui::Text(m_InputName.c_str());
 	ImGui::InputText("##output_image", &m_OutputName);
 	ImGui::SameLine();
 	if(ImGui::Button("Save file")){
@@ -272,6 +266,7 @@ bool TextureConvert::LoadTextureFromFile(const char* filename) {
 			start = i + 1;
 		}
 	}
+	m_OutputName = "";
 	for(int i = size - 1; i > start; i--) {
 		if(filename[i] == '.') {
 			for(int c = start; c < i; c++){
@@ -280,68 +275,6 @@ bool TextureConvert::LoadTextureFromFile(const char* filename) {
 			break;
 		}
 	}
-	memcpy(m_InputName, filename, size);
+	m_InputName = filename;
 	return true;
 }
-
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <Shobjidl.h>
-#include <iostream>
-
-void TextureConvert::OpenDialogWindows(char* buffer, size_t size) {
-    	std::wstring strw;
-	std::string stra = "";
-	//File Dialog
-	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED |
-		COINIT_DISABLE_OLE1DDE);
-	COMDLG_FILTERSPEC filter;
-	filter.pszName = L"Image files";
-	filter.pszSpec = L"*.png; *.jpg; *.tga; *.bmp";
-	if (SUCCEEDED(hr))
-	{
-		IFileOpenDialog* pFileOpen;
-
-		// Create the FileOpenDialog object.
-		hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
-			IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
-		hr = pFileOpen->SetFileTypes(1, &filter);
-		if (SUCCEEDED(hr))
-		{
-			// Show the Open dialog box.
-			hr = pFileOpen->Show(NULL);
-
-			// Get the file name from the dialog box.
-			if (SUCCEEDED(hr))
-			{
-				IShellItem* pItem;
-				hr = pFileOpen->GetResult(&pItem);
-				printf("Trying to get result\n");
-				if (SUCCEEDED(hr))
-				{
-					PWSTR pszFilePath;
-					hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
-					printf("Trying to get DisplayName\n");
-					// Display the file name to the user.
-					if (SUCCEEDED(hr))
-					{
-						//MessageBoxW(NULL, pszFilePath, L"File Path", MB_OK);
-						strw = pszFilePath;
-						printf("Selection: %ls\n", pszFilePath);
-						size_t sz = 0;
-						wcstombs_s(&sz, buffer, size, pszFilePath, wcslen(pszFilePath));
-						CoTaskMemFree(pszFilePath);
-					}
-					pItem->Release();
-				}else {
-					printf("HRESULT: %x", hr);
-				}
-			}
-			pFileOpen->Release();
-		}
-		CoUninitialize();
-	}  
-}
-
-#endif

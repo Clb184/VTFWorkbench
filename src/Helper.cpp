@@ -106,6 +106,8 @@ bool CreateMultiSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_c
 		}
 		CoUninitialize();
 	}
-	printf("Failed with HRESULT: %x", hr);
+	if(hr == ERROR_CANCELLED) {
+		printf("Failed with HRESULT: %x", hr);
+	}
 	return false;
 }

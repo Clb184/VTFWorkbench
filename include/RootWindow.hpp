@@ -27,10 +27,8 @@ private:
 	void MoveMaterialConstructors();
 	void MoveMaterialOutputs();
 
-#ifdef WIN32
-	void OpenTextureDialogWindows();
-	void OpenMaterialTemplateDialogWindows();
-#endif
+	void OpenTextureDialog();
+	void OpenMaterialTemplateDialog();
 
 	void CreateMaterialConstructor();
 	void LoadMaterialPreset();

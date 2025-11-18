@@ -22,13 +22,10 @@ public:
 	const std::string GetTextureName() const;
 private:
 	bool LoadTextureFromFile(const char* filename);
-#ifdef WIN32
-	void OpenDialogWindows(char* buffer, size_t size);
-#endif
 
 private:
 	std::string m_InternalName;
-	char m_InputName[1024 + 1];
+	std::string m_InputName;
 	std::string m_OutputName;
 	bool m_bAvoidFree;
 	uint8_t* m_pPixelData;

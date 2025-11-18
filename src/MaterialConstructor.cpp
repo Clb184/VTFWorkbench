@@ -82,7 +82,7 @@ void MaterialConstructor::DrawAddButtons() {
 	if(ImGui::Button("Add float 3")) {
 		m_Nodes.emplace_back(NODE_FLOAT3);
 	}
-	ImGui::SameLine();
+	//ImGui::SameLine();
 	if(ImGui::Button("Add float 4")) {
 		m_Nodes.emplace_back(NODE_FLOAT4);
 	}
