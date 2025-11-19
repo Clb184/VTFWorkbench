@@ -247,12 +247,13 @@ bool TextureConvert::LoadTextureFromFile(const char* filename) {
 		return false;
 	}
 
-	printf("Loaded texture \"%s\" (w: %d h: %d)\n", filename, w, h);
+	printf("Loaded texture \"%s\" (w: %d h: %d channels: %d)\n", filename, w, h, channel);
 	
 	GLuint tex = 0;
+	GLenum format = channel == 4 ? GL_RGBA : (channel == 3) ? GL_RGB : (channel == 2) ? GL_RG : GL_RED;
 	glCreateTextures(GL_TEXTURE_2D, 1, &tex);
 	glTextureStorage2D(tex, 1, GL_RGBA32F, w, h);
-	glTextureSubImage2D(tex, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	glTextureSubImage2D(tex, 0, 0, 0, w, h, format, GL_UNSIGNED_BYTE, pixels);
 
 	m_pPixelData = pixels;
 	m_Width = w;	
