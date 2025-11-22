@@ -310,7 +310,7 @@ void RootWindow::MoveMaterialOutputs() {
 
 void RootWindow::OpenTextureDialog() {
 	bool on_success = false;
-	std::vector<std::string> tex_names;
+	std::vector<std::wstring> tex_names;
 #ifdef WIN32
 	COMDLG_FILTERSPEC filter;
 	filter.pszName = L"Image files";
@@ -323,6 +323,7 @@ void RootWindow::OpenTextureDialog() {
 
 	for(auto& tex : tex_names) {
 		printf("Load texture\n");
+#pragma message("On TexConvert vector")
 		m_CvtInstances.emplace_back(m_TexConvID, tex.c_str());
 		printf("Added texconvert instance at %d with ID %d\n",
 			m_CvtInstances.size() -1,
@@ -334,7 +335,7 @@ void RootWindow::OpenTextureDialog() {
 
 void RootWindow::OpenMaterialTemplateDialog() {
 	bool on_success = false;
-	std::vector<std::string> mat_names;
+	std::vector<std::wstring> mat_names;
 #ifdef WIN32
 	COMDLG_FILTERSPEC filter;
 	filter.pszName = L"Material Template (JSON)";
@@ -413,7 +414,7 @@ void RootWindow::RemoveMaterialFromOutputs(int id) {
 
 void RootWindow::OpenProject() {
 	bool on_success = false;
-	std::string project_name;
+	std::wstring project_name;
 #ifdef WIN32
 	COMDLG_FILTERSPEC filter;
 	filter.pszName = L"Project files (VWP)";
@@ -435,7 +436,7 @@ void RootWindow::OpenProject() {
 			m_MaterialPath = js["material_path"];
 
 			for(auto& tex : js["textures"]){
-				std::string name = tex["source"];
+				std::wstring name = tex["source"];
 				auto& cvt = m_CvtInstances.emplace_back(m_TexConvID, name.c_str());
 				cvt.SetTextureFlags(tex["flags"]);
 				cvt.SetTextureFormat(tex["format"]);

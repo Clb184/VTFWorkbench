@@ -11,8 +11,8 @@ void NormalizeString(std::string* string);
 #include <Windows.h>
 #include <Shobjidl.h>
 
-bool CreateSingleSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::string* result);
-bool CreateMultiSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filet_cnt, std::vector<std::string>* result);
+bool CreateSingleSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::wstring* result);
+bool CreateMultiSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filet_cnt, std::vector<std::wstring>* result);
 bool CreateSaveDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::string* result, LPCWSTR default_ext);
 
 #endif

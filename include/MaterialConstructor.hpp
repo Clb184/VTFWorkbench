@@ -40,7 +40,7 @@ struct value_node_t {
 class MaterialConstructor {
 public:
 	MaterialConstructor(int id);
-	MaterialConstructor(int id, const char* json_template);
+	MaterialConstructor(int id, const wchar_t* json_template);
 	~MaterialConstructor();
 
 	bool Move();
@@ -54,7 +54,7 @@ private:
 	void DrawAddButtons();
 	void DrawNodeValues();
 	void SaveTemplate();
-	void LoadFromFile(const char* filename);
+	void LoadFromFile(const wchar_t* filename);
 private:
 	std::string m_InternalName;
 	std::string m_MaterialName;

@@ -14,7 +14,7 @@ void NormalizeString(std::string* string) {
 	}
 }
 
-bool CreateSingleSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::string* result) {
+bool CreateSingleSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::wstring* result) {
 	//File Dialog
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	if (SUCCEEDED(hr)) {
@@ -38,9 +38,9 @@ bool CreateSingleSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_
 						char buffer[1024] = "";
 						size_t sz = 0;
 						printf("Selection: %ls\n", pszFilePath);
-						wcstombs_s(&sz, buffer, 1024, pszFilePath, wcslen(pszFilePath));
+					//	wcstombs_s(&sz, buffer, 1024, pszFilePath, wcslen(pszFilePath));
 						CoTaskMemFree(pszFilePath);
-						*result = std::string(buffer);
+						*result = std::wstring(pszFilePath);
 						return true;
 					}
 					item->Release();
@@ -56,7 +56,7 @@ bool CreateSingleSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_
 	return false;
 }
 
-bool CreateMultiSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::vector<std::string>* result) {
+bool CreateMultiSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::vector<std::wstring>* result) {
 	//File Dialog
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	bool on_success = false;
@@ -93,10 +93,10 @@ bool CreateMultiSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_c
 						if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath))) {
 								char buffer[1024] = "";
 								size_t sz = 0;
-								printf("Selection: %ls\n", pszFilePath);
-								wcstombs_s(&sz, buffer, 1024, pszFilePath, wcslen(pszFilePath));
+								wprintf(L"Selection: %ls\n", pszFilePath);
+								//wcstombs_s(&sz, buffer, 1024, pszFilePath, wcslen(pszFilePath));
 								CoTaskMemFree(pszFilePath);
-								result->emplace_back(buffer);
+								result->emplace_back(pszFilePath);
 								
 							}
 							item->Release();

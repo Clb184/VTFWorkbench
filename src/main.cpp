@@ -4,12 +4,12 @@
 #include "imgui_impl_opengl3.h"
 #include "GL/glew.h"
 #include "glfw/glfw3.h"
-
 #include "RootWindow.hpp"
 
 int main() {
 	
 	printf("Initializing VTF Workbench\n");
+
 	// Init GLFW
 	printf("Initializing GLFW\n");
 	if(!glfwInit()) {
@@ -64,7 +64,8 @@ int main() {
 	vlInitialize();
 	RootWindow* root_window = new RootWindow((float)winw, (float)winh);
 	while(!glfwWindowShouldClose(window)){
-		// Process messages
+		// Process messages, we wait since we don't really do any animations
+		glfwWaitEvents();
 		glfwPollEvents();
 
 		// New ImGUI frame

@@ -7,20 +7,21 @@
 #include <stdint.h>
 #include <string>
 #include <filesystem>
+#include <fstream>
 #include "json.hpp"
 
 // Texture convert window and its contents
 class TextureConvert {
 public:
 	TextureConvert(int id);
-	TextureConvert(int id, const char* filename);
+	TextureConvert(int id, const wchar_t* filename);
 	~TextureConvert();
 
 	bool Move();
 	void SetDelete();
 	void SaveFile(const std::filesystem::path& base_path);
 
-	const std::string GetTextureSource() const;
+	const std::wstring GetTextureSource() const;
 	const std::string GetTextureName() const;
 	
 	int GetTextureFlags();
@@ -30,11 +31,11 @@ public:
 	
 	void AsJSON(nlohmann::json* out);
 private:
-	bool LoadTextureFromFile(const char* filename);
+	bool LoadTextureFromFile(const std::wstring& filename);
 
 private:
 	std::string m_InternalName;
-	std::string m_InputName;
+	std::wstring m_InputName;
 	std::string m_OutputName;
 	bool m_bAvoidFree;
 	uint8_t* m_pPixelData;

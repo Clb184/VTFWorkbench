@@ -69,7 +69,7 @@ TextureConvert::TextureConvert(int id) {
 	m_TextureFormat = 8; 
 }
 
-TextureConvert::TextureConvert(int id, const char* filename) {
+TextureConvert::TextureConvert(int id, const wchar_t* filename) {
 	m_InternalName = "texture " + std::to_string(id); 
 	// Set STB to flip image
 	stbi_set_flip_vertically_on_load(false);
@@ -93,8 +93,9 @@ TextureConvert::TextureConvert(int id, const char* filename) {
 	m_CreateOptions.uiResizeClampWidth = 8192;
 	m_CreateOptions.uiResizeClampHeight = 8192;
 	
-	printf("Load texture on constructor received: %s\n", filename);
+	wprintf(L"Load texture on constructor received: %s\n", filename);
 	LoadTextureFromFile(filename);
+
 	m_bAvoidFree = true;
 	m_TextureFormat = 9; 
 }
@@ -122,17 +123,17 @@ bool TextureConvert::Move() {
 		on_success = CreateSingleSelectDialogWindows(&filter, 1, &m_InputName);
 #endif
 		if(on_success) {
-			printf("Loading %s\n", m_InputName.c_str());
+			wprintf(L"Loading %s\n", m_InputName.c_str());
 			if(nullptr != m_pPixelData) {
 				free(m_pPixelData);
 				glDeleteTextures(1, &m_TextureID);
 			}
-			LoadTextureFromFile(m_InputName.c_str());
+			LoadTextureFromFile(std::wstring(m_InputName.begin(), m_InputName.end()));
 		}
 		
 	}
 	ImGui::SameLine();
-	ImGui::Text(m_InputName.c_str());
+	ImGui::Text("%ls", m_InputName.c_str());
 	ImGui::InputText("##output_image", &m_OutputName);
 	ImGui::SameLine();
 	if(ImGui::Button("Save file")){
@@ -243,7 +244,7 @@ void TextureConvert::SaveFile(const std::filesystem::path& base_path) {
 }
 
 
-const std::string TextureConvert::GetTextureSource() const {
+const std::wstring TextureConvert::GetTextureSource() const {
 	return m_InputName;
 }
 
@@ -274,67 +275,49 @@ void TextureConvert::AsJSON(nlohmann::json* out) {
 	}
 }
 
-bool TextureConvert::LoadTextureFromFile(const char* filename) {
+bool TextureConvert::LoadTextureFromFile(const std::wstring& filename) {
 	int channel = 0;
 	int w = 0, h = 0;
 	uint8_t* pixels = nullptr;
-	// printf("Loading texture \"%s\"\n", filename);
-	if(!(pixels = stbi_load(filename, &w, &h, &channel, 0))) {
-		printf("Failed loading texture \"%s\"\n", filename);
+	wprintf(L"Loading texture \"%s\"\n", filename.c_str());
+	std::ifstream image(filename.c_str(), std::ios::binary);
+	size_t sz = 0;
+	char* file_data = nullptr;
+	bool on_success = false;
+	if(image.is_open()){
+		wprintf(L"Image %s opened\n", filename.c_str());
+		image.seekg(0, std::ios::end);
+		sz = image.tellg();
+		image.seekg(0, std::ios::beg);
+		file_data = (char*)calloc(sz, 1);
+		image.read(file_data, sz);
+		printf("tellg returned %d\n", sz);
+
+		pixels = stbi_load_from_memory((uint8_t*)file_data, sz, &w, &h, &channel, 4);
+
+		if(nullptr != pixels) {
+			wprintf(L"Loaded texture \"%s\" (w: %d h: %d channels: %d)\n", filename.c_str(), w, h, channel);
+			on_success = true;
+		}
+		free(file_data);
+	}
+	if(false == on_success) {
+		wprintf(L"Failed loading texture \"%s\"\n", filename);
 		m_Width = 256;
 		m_Height = 256;
 		m_pPixelData = (uint8_t*)calloc(256 * 256, 4);
 		return false;
 	}
+	
 
-	printf("Loaded texture \"%s\" (w: %d h: %d channels: %d)\n", filename, w, h, channel);
 	
 	// Fine, I'll do it myself (Manual forced alpha or other channels)
 	uint8_t* ndata = (uint8_t*)calloc(w * h, 4);
+	
+	// Since STB can handle the channel conversion, I'll leave it to them
+	memcpy(ndata, pixels, w * h * 4);
 
-	switch(channel) {
-	case 1:
-		// All channels with same value
-		for(int j = 0; j < h; j++) {
-			for(int i = 0; i < w; i++){
-				int idx = i + w * j;
-				ndata[idx * 4] = pixels[idx];
-				ndata[idx * 4 + 1] = pixels[idx];
-				ndata[idx * 4 + 2] = pixels[idx];
-				ndata[idx * 4 + 3] = pixels[idx];
-			}
-		}
-		break;
-	case 2:
-		// I've never seen textures with two channels only	
-		for(int j = 0; j < h; j++) {
-			for(int i = 0; i < w; i++){
-				int idx = i + w * j;
-				ndata[idx * 4] = pixels[idx * 2];
-				ndata[idx * 4 + 1] = pixels[idx * 2 + 1];
-				ndata[idx * 4 + 2] = 255;
-				ndata[idx * 4 + 3] = 255;
-			}
-		}
-		break;
-	case 3:
-		// Alpha guaranteed to be 255
-		for(int j = 0; j < h; j++) {
-			for(int i = 0; i < w; i++){
-				int idx = i + w * j;
-				ndata[idx * 4] = pixels[idx * 3];
-				ndata[idx * 4 + 1] = pixels[idx * 3 + 1];
-				ndata[idx * 4 + 2] = pixels[idx * 3 + 1];
-				ndata[idx * 4 + 3] = 255;
-			}
-		}
-		break;
-	case 4:
-		// Just copy
-		memcpy(ndata, pixels, w * h * 4);
-		break;
-	}
-
+	// Now the texture itself
 	GLuint tex = 0;
 	GLenum format = channel == 4 ? GL_RGBA : (channel == 3) ? GL_RGB : (channel == 2) ? GL_RG : GL_RED;
 	glCreateTextures(GL_TEXTURE_2D, 1, &tex);
@@ -347,18 +330,18 @@ bool TextureConvert::LoadTextureFromFile(const char* filename) {
 	m_Height = h;
 	m_TextureID = tex;
 	
-	size_t size = strlen(filename);
+	size_t size = filename.length();
 	int start = 0;
 	for(size_t i = 0; i < size; i++){
-		if(filename[i] == '\\' || filename[i] == '/'){
+		if(filename.at(i) == '\\' || filename.at(i) == '/'){
 			start = i + 1;
 		}
 	}
 	m_OutputName = "";
 	for(int i = size - 1; i > start; i--) {
-		if(filename[i] == '.') {
+		if(filename.at(i) == '.') {
 			for(int c = start; c < i; c++){
-				m_OutputName.push_back(filename[c]);
+				m_OutputName.push_back(filename.at(c));
 			}
 			break;
 		}

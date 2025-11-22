@@ -13,7 +13,7 @@ MaterialConstructor::MaterialConstructor(int id) {
 	m_ShaderType = "VertexLitGeneric";
 }
 
-MaterialConstructor::MaterialConstructor(int id, const char* json_template) {
+MaterialConstructor::MaterialConstructor(int id, const wchar_t* json_template) {
 	m_InternalName = "material " + std::to_string(id);
 	m_MaterialName = "Material " + std::to_string(id);
 	m_ShaderType = "VertexLitGeneric";
@@ -298,7 +298,7 @@ void MaterialConstructor::SaveTemplate() {
 #endif
 }
 
-void MaterialConstructor::LoadFromFile(const char* filename) {
+void MaterialConstructor::LoadFromFile(const wchar_t* filename) {
 	// Material JSON file
 	std::ifstream material_src;
 	
