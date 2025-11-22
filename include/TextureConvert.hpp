@@ -20,13 +20,13 @@ public:
 	void SetDelete();
 	void SaveFile(const std::filesystem::path& base_path);
 
-	void SetTextureFlags(int flags);
-	void SetTextureFormat(int format);
-
 	const std::string GetTextureSource() const;
 	const std::string GetTextureName() const;
+	
 	int GetTextureFlags();
 	int GetTextureFormat();
+	void SetTextureFlags(int flags);
+	void SetTextureFormat(int format);
 	
 	void AsJSON(nlohmann::json* out);
 private:

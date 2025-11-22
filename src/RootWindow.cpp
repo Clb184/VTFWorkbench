@@ -15,6 +15,7 @@ RootWindow::RootWindow(float width, float height)
 	m_MatConstID = 0;
 	//memset(m_MaterialPath, 0, 1024 + 4);
 	m_bOpenFirstTime = false;
+	printf("Initializing Root Window\n");
 }
 
 RootWindow::~RootWindow() {

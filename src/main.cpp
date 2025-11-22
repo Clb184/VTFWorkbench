@@ -8,24 +8,39 @@
 #include "RootWindow.hpp"
 
 int main() {
-
+	
+	printf("Initializing VTF Workbench\n");
 	// Init GLFW
-	if(!glfwInit()) return -1;
+	printf("Initializing GLFW\n");
+	if(!glfwInit()) {
+		printf("Failed initializing GLFW\n");
+	       	return -1;
+	}
 
 	// Setup for GL 4.5
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	//glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 	int winw = 1280, winh = 720;
 	// Create window
+	printf("Creating GLFWwindow\n");
 	GLFWwindow* window = glfwCreateWindow(winw, winh, "VTF Workbench", NULL, NULL);
 	if(nullptr == window) { std::cout << "Failed creating window\n"; return -1; }
 
 	glfwMakeContextCurrent(window);
-	glewInit();
+
+	printf("Initializing GLEW\n");
+	if(GLEW_OK != glewInit()) {
+		printf("Failed initializing GLEW\n");
+		return -1;
+	}
 	glfwSwapInterval(1);
 	
+	printf("GPU Vendor is: %s\n", glGetString(GL_VENDOR));
+	printf("OpenGL version is: %s\n", glGetString(GL_VERSION));
+
+	printf("Initializing ImGUI\n");
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
@@ -45,6 +60,7 @@ int main() {
 	
 
 	// Initialize VTFLib
+	printf("Initializing VTFLib\n");
 	vlInitialize();
 	RootWindow* root_window = new RootWindow((float)winw, (float)winh);
 	while(!glfwWindowShouldClose(window)){
