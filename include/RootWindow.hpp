@@ -7,7 +7,7 @@
 #include <vector>
 #include <filesystem>
 
-#define VTFW_VERSION "1.0.2"
+#define VTFW_VERSION "1.0.3"
 
 struct output_vmt_t {
 	std::string name;
@@ -47,6 +47,8 @@ private:
 	void ClearWorkspace();
 private:
 	bool m_bOpenFirstTime;
+	float m_XPath, m_YPath;
+	float m_XOutput, m_YOutput;
 	float m_Width;
 	float m_Height;
 	int m_TexConvID;

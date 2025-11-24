@@ -11,6 +11,9 @@ MaterialConstructor::MaterialConstructor(int id) {
 	m_InternalName = "material " + std::to_string(id);
 	m_MaterialName = "Material " + std::to_string(id);
 	m_ShaderType = "VertexLitGeneric"; // Default shader, but apparently the only used by everyone?
+	m_bFirstTime = true;
+	m_X = 640.0f;
+	m_Y = 64.0f;
 }
 
 MaterialConstructor::MaterialConstructor(int id, const wchar_t* json_template) {
@@ -18,6 +21,9 @@ MaterialConstructor::MaterialConstructor(int id, const wchar_t* json_template) {
 	m_MaterialName = "Material " + std::to_string(id);
 	m_ShaderType = "VertexLitGeneric";
 	LoadFromFile(json_template);
+	m_bFirstTime = true;
+	m_X = 640.0f;
+	m_Y = 64.0f;
 }
 
 MaterialConstructor::~MaterialConstructor() {
@@ -26,8 +32,14 @@ MaterialConstructor::~MaterialConstructor() {
 
 bool MaterialConstructor::Move() {
 	bool is_open = true;
+	if(m_bFirstTime) {
+		ImGui::SetNextWindowPos({m_X, m_Y});
+		m_bFirstTime = false;
+	}
 	ImGui::Begin(m_InternalName.c_str(), &is_open, ImGuiWindowFlags_NoSavedSettings);
-
+	ImVec2 pos = ImGui::GetWindowPos();
+	m_X = pos.x;
+	m_Y = pos.y;
 	// Set material name (Also displayed on outputs window)
 	ImGui::InputText("Name", &m_MaterialName);
 	if(ImGui::Button("Save template")) {
@@ -103,7 +115,8 @@ void MaterialConstructor::AsJSON(nlohmann::json* out) {
 		nlohmann::json js;
 		js["name"] = m_MaterialName;
 		js["type"] = m_ShaderType;
-	
+		float pos[2] = {m_X, m_Y};
+		js["pos"] = pos;
 		for(auto& node : m_Nodes){
 			NormalizeString(&node.name);
 			if(node.name == "") continue;
@@ -136,6 +149,11 @@ void MaterialConstructor::AsJSON(nlohmann::json* out) {
 	catch(const std::exception& e) {
 		printf("JSON error: %s\n", e.what());
 	}
+}
+
+void MaterialConstructor::SetWindowPosition(float pos[2]) {
+	m_X = pos[0];
+	m_Y = pos[1];
 }
 
 void MaterialConstructor::DrawAddButtons() {
@@ -223,6 +241,14 @@ bool MaterialConstructor::LoadFromJSON(nlohmann::json& js) {
 
 		m_MaterialName = name;
 		m_ShaderType = type;
+
+		if(js.find("pos") != js.end()) {
+			std::array<float, 2> ps = js["pos"];
+			m_X = ps[0];
+			m_Y = ps[1];
+		} else {
+			printf("Pos key not founf, it will be created when you save the project\n");
+		}
 			
 		auto& body = js["body"];
 		for(nlohmann::json::iterator it = js["body"].begin(); it != js["body"].end(); it++){

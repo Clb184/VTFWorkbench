@@ -67,6 +67,9 @@ TextureConvert::TextureConvert(int id) {
 	m_Height = 0;
 	m_TextureID = -1;
 	m_TextureFormat = 8; 
+	m_bFirstTime = true;
+	m_X = 640.0f;
+	m_Y = 64.0f;
 }
 
 TextureConvert::TextureConvert(int id, const wchar_t* filename) {
@@ -98,6 +101,11 @@ TextureConvert::TextureConvert(int id, const wchar_t* filename) {
 
 	m_bAvoidFree = true;
 	m_TextureFormat = 9; 
+	
+	// Loading window for first time
+	m_bFirstTime = true;
+	m_X = 640.0f;
+	m_Y = 64.0f;
 }
 
 TextureConvert::~TextureConvert() {
@@ -110,9 +118,17 @@ TextureConvert::~TextureConvert() {
 bool TextureConvert::Move() {
 
 	bool is_open = true;
+	if(m_bFirstTime) {
+		ImGui::SetNextWindowPos({m_X, m_Y});
+		m_bFirstTime = false;
+	}
 	ImGui::Begin(m_InternalName.c_str(), &is_open, ImGuiWindowFlags_NoSavedSettings);
 	// Test some groupings
 	ImGui::BeginGroup();
+	ImVec2 pos = ImGui::GetWindowPos();
+	m_X = pos.x;
+	m_Y = pos.y;
+	//ImGui::Text("x %f, y %f", pos.x, pos.y);
 	if(ImGui::Button("Load texture")) {
 		bool on_success = false;
 #ifdef WIN32
@@ -192,6 +208,7 @@ bool TextureConvert::Move() {
 
 	ImGui::EndGroup();
 	
+
 	ImGui::End();
 	if(!is_open) {
 		printf("closed window\n");
@@ -248,6 +265,10 @@ const std::wstring TextureConvert::GetTextureSource() const {
 	return m_InputName;
 }
 
+void TextureConvert::SetTextureName(const std::string& name) {
+	m_OutputName = name;
+}
+
 const std::string TextureConvert::GetTextureName() const {
 	return m_OutputName;
 }
@@ -267,12 +288,21 @@ void TextureConvert::AsJSON(nlohmann::json* out) {
 		js["source"] = m_InputName;
 		js["flags"] = m_CreateOptions.uiFlags;
 		js["format"] = m_TextureFormat;
+		js["name"] = m_OutputName;
+		float pos[2] = {m_X, m_Y};
+		js["pos"] = pos;
 
 		*out = std::move(js);
 	}
 	catch(const std::exception& e){
 		printf("JSON exception: %s\n", e.what());
 	}
+}
+
+void TextureConvert::SetWindowPosition(float pos[2]) {
+	m_X = pos[0];
+	m_Y = pos[1];
+	printf("Setting window pos at x %f, y %f\n", m_X, m_Y);
 }
 
 bool TextureConvert::LoadTextureFromFile(const std::wstring& filename) {

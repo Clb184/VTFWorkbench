@@ -22,6 +22,7 @@ public:
 	void SaveFile(const std::filesystem::path& base_path);
 
 	const std::wstring GetTextureSource() const;
+	void SetTextureName(const std::string& name);
 	const std::string GetTextureName() const;
 	
 	int GetTextureFlags();
@@ -30,10 +31,14 @@ public:
 	void SetTextureFormat(int format);
 	
 	void AsJSON(nlohmann::json* out);
+
+	void SetWindowPosition(float pos[2]);
 private:
 	bool LoadTextureFromFile(const std::wstring& filename);
 
 private:
+	bool m_bFirstTime;
+	float m_X, m_Y;
 	std::string m_InternalName;
 	std::wstring m_InputName;
 	std::string m_OutputName;

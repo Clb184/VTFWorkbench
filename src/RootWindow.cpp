@@ -16,6 +16,11 @@ RootWindow::RootWindow(float width, float height)
 	//memset(m_MaterialPath, 0, 1024 + 4);
 	m_bOpenFirstTime = false;
 	printf("Initializing Root Window\n");
+	m_XPath = 64.0f;
+	m_YPath = 80.0f;
+
+	m_XOutput = 64.0f;
+	m_YOutput = 192.0f;
 }
 
 RootWindow::~RootWindow() {
@@ -87,14 +92,14 @@ void RootWindow::Move() {
 	
 	// Move base paths window
 	if(!m_bOpenFirstTime) {
-		ImGui::SetNextWindowPos({64.0f, 80.0f});
+		ImGui::SetNextWindowPos({m_XPath, m_YPath});
 	}
 	MoveBaseVars();
 
 	// Window with the outputs at first init
 	if(!m_bOpenFirstTime) { 
 		ImGui::SetNextWindowSize({500.0f, 100.0f}); 
-		ImGui::SetNextWindowPos({64.0f, 192.0f});
+		ImGui::SetNextWindowPos({m_XOutput, m_YOutput});
 		m_bOpenFirstTime = true;
 	}
 
@@ -156,7 +161,9 @@ void RootWindow::MoveBaseVars() {
 		       	ImGuiWindowFlags_NoCollapse |
 			ImGuiWindowFlags_NoResize
 			);
-
+	ImVec2 pos = ImGui::GetWindowPos();
+	m_XPath = pos.x;
+	m_YPath = pos.y;
 	ImGui::BeginGroup();
 	ImGui::Text("Base path    ");
 	ImGui::SameLine();
@@ -239,6 +246,9 @@ void RootWindow::MoveMaterialOutputs() {
 			ImGuiWindowFlags_NoSavedSettings |
 			ImGuiWindowFlags_NoCollapse
 			);
+	ImVec2 pos = ImGui::GetWindowPos();
+	m_XOutput = pos.x;
+	m_YOutput = pos.y;
 	if(ImGui::Button("Add output")) {
 		m_OutputsList.emplace_back();
 	}
@@ -355,7 +365,7 @@ void RootWindow::OpenMaterialTemplateDialog() {
 	for(auto& mat : mat_names){
 		printf("Load material template\n");
 		m_MatCInstances.emplace_back(m_MatConstID, mat.c_str());
-		printf("Added materialconst instance at %zu with ID %d\n",
+		printf("Added materialconst instance at %u with ID %d\n",
 		  	m_MatCInstances.size() -1,
 			m_MatConstID
 			);
@@ -443,12 +453,39 @@ void RootWindow::OpenProject() {
 
 			m_BasePath = js["base_path"];
 			m_MaterialPath = js["material_path"];
+			
+			if(js.find("pos_path") != js.end()) {
+				std::array<float, 2> ps = js["pos_path"];
+				m_XPath = ps[0];
+				m_YPath = ps[1];
+			} else {
+				printf("Pos_Path key not found, it'll be created when you save the project");
+			}
+			if(js.find("pos_output") != js.end()) {
+				std::array<float, 2> ps = js["pos_output"];
+				m_XOutput = ps[0];
+				m_YOutput = ps[1];
+			} else {
+				printf("Pos_Output key not found, it'll be created when you save the project");
+			}
 
 			for(auto& tex : js["textures"]){
 				std::wstring name = tex["source"];
 				auto& cvt = m_CvtInstances.emplace_back(m_TexConvID, name.c_str());
 				cvt.SetTextureFlags(tex["flags"]);
 				cvt.SetTextureFormat(tex["format"]);
+				if(tex.find("name") != tex.end()) {
+					cvt.SetTextureName(tex["name"]);
+				} else {
+					printf("Name key not found, it'll be created when you save the project\n");
+				}
+				if(tex.find("pos") != tex.end()) {
+					std::array<float, 2> ps = tex["pos"];
+					float pos[2] = {ps[0], ps[1]};
+					cvt.SetWindowPosition(pos);
+				} else {
+					printf("Pos key not found, it'll be created when you save the project\n");
+				}
 				m_TexConvID++;
 			}
 			for(nlohmann::json& mat : js["materials"]){
@@ -491,6 +528,11 @@ void RootWindow::SaveProject() {
 		nlohmann::json js;
 		js["base_path"] = m_BasePath;
 		js["material_path"] = m_MaterialPath;
+		float pos_p[2] = {m_XPath, m_YPath};
+		js["pos_path"] = pos_p;
+		float pos_o[2] = {m_XOutput, m_YOutput};
+		js["pos_output"] = pos_o;
+
 		for(auto& tex : m_CvtInstances) {
 			nlohmann::json tex_js;
 			tex.AsJSON(&tex_js);
@@ -531,4 +573,9 @@ void RootWindow::ClearWorkspace() {
 	m_OutputsList.clear();
 	m_TexConvID = 0;
 	m_MatConstID = 0;
+	m_bOpenFirstTime = false;	
+	m_XPath = 64.0f;
+	m_YPath = 80.0f;
+	m_XOutput = 64.0f;
+	m_YOutput = 192.0f;
 }

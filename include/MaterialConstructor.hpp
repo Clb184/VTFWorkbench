@@ -56,12 +56,16 @@ public:
 	void AsJSON(nlohmann::json* ret);
 	void SaveJSON(const wchar_t* filename);
 	bool LoadFromJSON(nlohmann::json& js);
+
+	void SetWindowPosition(float pos[2]);
 private:
 	void DrawAddButtons();
 	void DrawNodeValues();
 	void SaveTemplate();
 	void LoadFromFile(const wchar_t* filename);
 private:
+	bool m_bFirstTime;
+	float m_X, m_Y;
 	std::string m_InternalName;
 	std::string m_MaterialName;
 	std::string m_ShaderType;
