@@ -38,6 +38,11 @@ struct value_node_t {
        	}
 };
 
+/*
+ * So, the only things that will be char instead of wchar_t are the name
+ * for the materials and textures, since it seems Source only accepts
+ * that
+ */
 class MaterialConstructor {
 public:
 	MaterialConstructor(int id);
