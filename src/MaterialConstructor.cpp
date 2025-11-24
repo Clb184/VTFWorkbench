@@ -10,7 +10,7 @@
 MaterialConstructor::MaterialConstructor(int id) {
 	m_InternalName = "material " + std::to_string(id);
 	m_MaterialName = "Material " + std::to_string(id);
-	m_ShaderType = "VertexLitGeneric";
+	m_ShaderType = "VertexLitGeneric"; // Default shader, but apparently the only used by everyone?
 }
 
 MaterialConstructor::MaterialConstructor(int id, const wchar_t* json_template) {
@@ -34,6 +34,7 @@ bool MaterialConstructor::Move() {
 		// For now I use the name of the material template itself
 		SaveTemplate();
 	}
+	ImGui::InputText("Shader type", &m_ShaderType);
 	DrawAddButtons();
 	DrawNodeValues();
 	ImGui::End();
@@ -43,24 +44,24 @@ bool MaterialConstructor::Move() {
 	return is_open;
 }
 
-void MaterialConstructor::CreateMaterial(const std::string& texture_name, const std::filesystem::path& name) {
+void MaterialConstructor::SaveFile(const std::string& texture_name, const std::string& material_name) {
 	std::string ret;
-	try {
-		nlohmann::json src;
-		nlohmann::json js;
-		AsJSON(&js);
-		src["material"].emplace_back(std::move(js));
-		std::cout << src.dump(4) << "\n";
-	}
-	catch(const std::exception& e) {
-		printf("JSON exception: %s\n", e.what());
-	}
 	printf("Texture name: %s\n", texture_name.c_str());
+
+	// Start with the shader type name "VertexLitGeneric" or so
 	ret = "\"" + m_ShaderType + "\" {\n";
+
+	// I only do this for some kind of trying to get things right
 	std::filesystem::path tex_path = RootWindow::GetMaterialPath() / std::filesystem::path(texture_name);
+
+	// Don't add a texture if <null> is specified
 	if(texture_name != "<null>") {
 		ret += "\t$basetexture \"" + tex_path.string() + "\"\n";
 	}
+
+	// Then, for each node output stuff formatted in certain way
+	// I'm not using VTFLib's CVMTFile cuz seems a bit weird to use,
+	// not like the VMT structure is difficult to make tho
 	for(auto& node : m_Nodes){
 		NormalizeString(&node.name);
 		if(node.name == "") continue;
@@ -77,18 +78,19 @@ void MaterialConstructor::CreateMaterial(const std::string& texture_name, const 
 		ret += "\"\n";
 	}
 	ret += "}";
-	printf("Material generated:\n%s\n", ret.c_str());
 
-	printf("Creating material %s\n", name.string().c_str());
-	FILE* fp = fopen(name.string().c_str(), "wb");
-	if(fp){
-		fwrite(ret.data(), 1, ret.length(), fp);
-		fclose(fp);
+	printf("Material generated:\n%s\n", ret.c_str());
+	
+	// Generate the path for the VMT and output it
+	std::filesystem::path vmt_path = RootWindow::GetBasePath() / RootWindow::GetMaterialPath() / std::filesystem::path(material_name + ".vmt");
+	wprintf(L"Creating material %s\n", vmt_path.wstring().c_str());
+	std::ofstream vmt_out(vmt_path.wstring().c_str(), std::ios::out);
+	if(vmt_out.is_open()){
+		vmt_out << ret;
 		printf("Saved VMT file\n");
 	} else {
 		printf("Couldn't save VMT file\n");
 	}
-	return;
 }
 
 const std::string MaterialConstructor::GetMaterialName() const {
@@ -175,7 +177,7 @@ void MaterialConstructor::DrawAddButtons() {
 
 void MaterialConstructor::DrawNodeValues() {
 	ImGui::BeginGroup();
-	for(int i = 0; i < m_Nodes.size(); i++){
+	for(size_t i = 0; i < m_Nodes.size(); i++){
 		std::string name = "##name" + std::to_string(i);
 		std::string value = "##value" + std::to_string(i);
 		ImGui::SetNextItemWidth(96.0f);
@@ -194,16 +196,16 @@ void MaterialConstructor::DrawNodeValues() {
 	ImGui::EndGroup();
 }
 
-void MaterialConstructor::SaveJSON(const char* filename) {
+void MaterialConstructor::SaveJSON(const wchar_t* filename) {
 	try {
 		// The output JSON file
 		std::ofstream output(filename, std::ios::out);
-		printf("Saving material template %s as JSON (%s)\n", m_MaterialName.c_str(), filename);
+		printf("Saving material template %s as JSON (%ls)\n", m_MaterialName.c_str(), filename);
 		if(output.is_open()) {
 			nlohmann::json js;
 			AsJSON(&js);
 			output << js.dump(4);
-			printf("Material template saved");
+			printf("Material template saved\n");
 		} else {
 			printf("Failed saving material template\n");
 		}
@@ -285,15 +287,16 @@ bool MaterialConstructor::LoadFromJSON(nlohmann::json& js) {
 }
 
 void MaterialConstructor::SaveTemplate() {
-	std::string name;
+	std::wstring name;
 #ifdef WIN32
 	COMDLG_FILTERSPEC filter;
 	filter.pszName = L"JSON template";
 	filter.pszSpec = L"*.json";
 	printf("Saving template (Windows save dialog)\n");
 	if(CreateSaveDialogWindows(&filter, 1, &name, L"json")) {
-		printf("Got %s as file name\n", name.c_str());
-		SaveJSON((name).c_str());
+		wprintf(L"Got %s as file name\n", name.c_str());
+		std::wstring name_wide(name.begin(), name.end());
+		SaveJSON(name_wide.c_str());
 	}
 #endif
 }

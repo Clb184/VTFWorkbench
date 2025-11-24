@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <fstream>
 #include <json.hpp>
 
 enum NODE_TYPE {
@@ -44,11 +45,11 @@ public:
 	~MaterialConstructor();
 
 	bool Move();
-	void CreateMaterial(const std::string& texture_name, const std::filesystem::path& name);
+	void SaveFile(const std::string& texture_name, const std::string& material_name);
 	const std::string GetMaterialName() const;
 
 	void AsJSON(nlohmann::json* ret);
-	void SaveJSON(const char* filename);
+	void SaveJSON(const wchar_t* filename);
 	bool LoadFromJSON(nlohmann::json& js);
 private:
 	void DrawAddButtons();

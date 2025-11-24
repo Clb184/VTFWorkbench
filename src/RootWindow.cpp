@@ -209,7 +209,7 @@ void RootWindow::MoveBaseVars() {
 }
 
 void RootWindow::MoveTexConvert() {
-	for (int i = 0; i < m_CvtInstances.size(); i++) {
+	for (size_t i = 0; i < m_CvtInstances.size(); i++) {
 		// Delete from list if closes
 		if(!m_CvtInstances[i].Move()) {
 			printf("Erasing CVT instance at %d\n", i);
@@ -222,7 +222,7 @@ void RootWindow::MoveTexConvert() {
 }
 
 void RootWindow::MoveMaterialConstructors() {
-	for (int i = 0; i < m_MatCInstances.size(); i++) {
+	for (size_t i = 0; i < m_MatCInstances.size(); i++) {
 		// Delete from list if closes
 		if(!m_MatCInstances[i].Move()) {
 			printf("Erasing MATC instance at %d\n", i);
@@ -242,53 +242,59 @@ void RootWindow::MoveMaterialOutputs() {
 	if(ImGui::Button("Add output")) {
 		m_OutputsList.emplace_back();
 	}
+
+	// How many outputs there are
 	ImGui::Text("Output count: %d", m_OutputsList.size());
+
+	// Properties
 	ImGui::BeginGroup();
-	for(int i = 0; i < m_OutputsList.size(); i++) {
+	for(size_t i = 0; i < m_OutputsList.size(); i++) {
+		output_vmt_t& outp = m_OutputsList[i];
+
+		// Begin the output group and its selection
 		ImGui::BeginGroup();
 		char buff[64] = "";
 		std::string id = "##out_name" + std::to_string(i);
 		std::string del_this = "Remove##del_" + std::to_string(i);
 		std::string save_this = "Save##sav_" + std::to_string(i);
 		ImGui::SetNextItemWidth(100.0f);
-		ImGui::InputText(id.c_str(), &m_OutputsList[i].name);
+		ImGui::InputText(id.c_str(), &outp.name);
 		ImGui::SameLine();
 
 		// Texture select
 		ImGui::SetNextItemWidth(96.0f);
-		std::string texture = m_OutputsList[i].base_texture > 0 ? m_CvtInstances[m_OutputsList[i].base_texture - 1].GetTextureName() : "<null>";
-		sprintf(buff, "Tex##%d", i);
+		std::string texture = outp.base_texture > 0 ? m_CvtInstances[outp.base_texture - 1].GetTextureName() : "<null>";
+		sprintf_s(buff, 64, "Tex##%d", i);
 		if(ImGui::BeginCombo(buff, texture.c_str())) {
-			bool selected = m_OutputsList[i].base_texture == 0;
-			sprintf(buff, "<null>#%d", i);
-			if(ImGui::Selectable("<null>##", selected)) {
-				m_OutputsList[i].base_texture == 0;
+			bool selected = outp.base_texture == 0;
+			sprintf_s(buff, 64, "<null>##%d", i);
+			if(ImGui::Selectable(buff, selected)) {
+				outp.base_texture = 0;
 			}
-			for(int j = 0; j < m_CvtInstances.size(); j++){
-				selected = (m_OutputsList[i].base_texture - 1) == j;
+			for(size_t j = 0; j < m_CvtInstances.size(); j++){
+				selected = (outp.base_texture - 1) == j;
 				if(ImGui::Selectable(std::string(m_CvtInstances[j].GetTextureName() + "##" + std::to_string(i)).c_str(), selected)){
-					m_OutputsList[i].base_texture = j + 1;
+					outp.base_texture = j + 1;
 				}
 			}
 			ImGui::EndCombo();
 		}
-		//ImGui::Text("Texture id");
 		ImGui::SameLine();
 
 		// Material template select
 		ImGui::SetNextItemWidth(96.0f);
-		sprintf(buff, "Mat##%d", i);
-		if(ImGui::BeginCombo(buff, m_MatCInstances.size() > 0 ? m_MatCInstances[m_OutputsList[i].template_material].GetMaterialName().c_str() : "<null>")) {
-			for(int j = 0; j < m_MatCInstances.size(); j++){
-				bool selected = (m_OutputsList[i].template_material) == j;
+		sprintf_s(buff, 64, "Mat##%d", i);
+		if(ImGui::BeginCombo(buff, m_MatCInstances.size() > 0 ? m_MatCInstances[outp.template_material].GetMaterialName().c_str() : "<null>")) {
+			for(size_t j = 0; j < m_MatCInstances.size(); j++){
+				bool selected = (outp.template_material) == j;
 				if(ImGui::Selectable(std::string(m_MatCInstances[j].GetMaterialName() + "##" + std::to_string(i)).c_str(), selected)){
-					m_OutputsList[i].template_material = j;
+					outp.template_material = j;
 				}
 			}
 			ImGui::EndCombo();
 		}
-		//ImGui::Text("Material temp");
 		ImGui::SameLine();
+
 		// Remove material from list
 		if(ImGui::Button(del_this.c_str())) {
 			m_OutputsList.erase(m_OutputsList.begin() + i);
@@ -297,10 +303,11 @@ void RootWindow::MoveMaterialOutputs() {
 			continue;
 		}
 		ImGui::SameLine();
+		
 		// Save	material
 		if(ImGui::Button(save_this.c_str())){
 			CheckCreateMissingPath();
-			SaveMaterial(m_OutputsList[i]);
+			SaveMaterial(outp);
 		}
 		ImGui::EndGroup();
 	}
@@ -369,13 +376,15 @@ bool RootWindow::SaveMaterial(const output_vmt_t& output) {
 	printf("texid: %d, matid: %d\n", output.base_texture, output.template_material);
 	std::string texture = (output.base_texture > 0) ? m_CvtInstances[output.base_texture - 1].GetTextureName() : "<null>";
 	printf("Texture name for material is %s\n", texture.c_str());
-	if(m_MatCInstances.size() > 0){
-		std::filesystem::path out_p = std::filesystem::path(m_BasePath) /
-	      		std::filesystem::path(m_MaterialPath) /
-		       	std::filesystem::path(output.name + ".vmt");
-		m_MatCInstances[output.template_material].CreateMaterial(texture, out_p);
+	
+	// Don't create materials with empty names
+	if(m_MatCInstances.size() > 0 && output.name != ""){
+		m_MatCInstances[output.template_material].SaveFile(texture, output.name);
 		return true;
+	} else if(output.name == "") {
+		printf("Output material has no name, skipping\n");
 	}
+	return false;
 }
 
 void RootWindow::CheckCreateMissingPath() {
@@ -465,7 +474,7 @@ void RootWindow::OpenProject() {
 
 void RootWindow::SaveProject() {
 	bool on_success = false;
-	std::string project_name;
+	std::wstring project_name;
 #ifdef WIN32
 	COMDLG_FILTERSPEC filter;
 	filter.pszName = L"Project files (VWP)";
@@ -476,7 +485,8 @@ void RootWindow::SaveProject() {
 	if(false == on_success) return;
 	
 	try {
-		printf("Saving project file %s\n", project_name.c_str());
+		// Save project as a JSON file cuz is easier to read
+		wprintf(L"Saving project file %s\n", project_name.c_str());
 		std::ofstream of(project_name.c_str(), std::ios::out);
 		nlohmann::json js;
 		js["base_path"] = m_BasePath;

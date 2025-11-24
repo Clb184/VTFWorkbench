@@ -276,33 +276,41 @@ void TextureConvert::AsJSON(nlohmann::json* out) {
 }
 
 bool TextureConvert::LoadTextureFromFile(const std::wstring& filename) {
+	bool on_success = false;
 	int channel = 0;
 	int w = 0, h = 0;
 	uint8_t* pixels = nullptr;
-	wprintf(L"Loading texture \"%s\"\n", filename.c_str());
+	uint8_t* file_data = nullptr;
 	std::ifstream image(filename.c_str(), std::ios::binary);
 	size_t sz = 0;
-	char* file_data = nullptr;
-	bool on_success = false;
+
+	// Load file in memory and pass it to STB
+	wprintf(L"Loading texture \"%s\"\n", filename.c_str());
 	if(image.is_open()){
 		wprintf(L"Image %s opened\n", filename.c_str());
 		image.seekg(0, std::ios::end);
-		sz = image.tellg();
+		sz = image.tellg(); // Get size in bytes to allocate
+		printf("tellg returned %u\n", sz);
 		image.seekg(0, std::ios::beg);
-		file_data = (char*)calloc(sz, 1);
-		image.read(file_data, sz);
-		printf("tellg returned %d\n", sz);
+		file_data = (uint8_t*)calloc(sz, 1);
 
-		pixels = stbi_load_from_memory((uint8_t*)file_data, sz, &w, &h, &channel, 4);
+		// Maybe we got no allocated memory or yes
+		if(nullptr != file_data) {
+			image.read((char*)file_data, sz);
+			pixels = stbi_load_from_memory(file_data, sz, &w, &h, &channel, 4);
+		}
 
+		// Maybe we didn't get image data or yes
 		if(nullptr != pixels) {
 			wprintf(L"Loaded texture \"%s\" (w: %d h: %d channels: %d)\n", filename.c_str(), w, h, channel);
 			on_success = true;
 		}
-		free(file_data);
+		if(nullptr != file_data) {
+			free(file_data);
+		}
 	}
 	if(false == on_success) {
-		wprintf(L"Failed loading texture \"%s\"\n", filename);
+		wprintf(L"Failed loading texture \"%s\"\n", filename.c_str());
 		m_Width = 256;
 		m_Height = 256;
 		m_pPixelData = (uint8_t*)calloc(256 * 256, 4);
@@ -319,10 +327,9 @@ bool TextureConvert::LoadTextureFromFile(const std::wstring& filename) {
 
 	// Now the texture itself
 	GLuint tex = 0;
-	GLenum format = channel == 4 ? GL_RGBA : (channel == 3) ? GL_RGB : (channel == 2) ? GL_RG : GL_RED;
 	glCreateTextures(GL_TEXTURE_2D, 1, &tex);
 	glTextureStorage2D(tex, 1, GL_RGBA32F, w, h);
-	glTextureSubImage2D(tex, 0, 0, 0, w, h, format, GL_UNSIGNED_BYTE, pixels);
+	glTextureSubImage2D(tex, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	stbi_image_free(pixels);
 
 	m_pPixelData = ndata;

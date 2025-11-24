@@ -13,7 +13,7 @@ void NormalizeString(std::string* string);
 
 bool CreateSingleSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::wstring* result);
 bool CreateMultiSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filet_cnt, std::vector<std::wstring>* result);
-bool CreateSaveDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::string* result, LPCWSTR default_ext);
+bool CreateSaveDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::wstring* result, LPCWSTR default_ext);
 
 #endif
 

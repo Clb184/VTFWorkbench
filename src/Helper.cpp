@@ -114,7 +114,7 @@ bool CreateMultiSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_c
 	return on_success;
 }
 
-bool CreateSaveDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::string* result, LPCWSTR default_ext) {
+bool CreateSaveDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::wstring* result, LPCWSTR default_ext) {
 	//File Dialog
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	if (SUCCEEDED(hr)) {
@@ -138,9 +138,9 @@ bool CreateSaveDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std
 						char buffer[1024] = "";
 						size_t sz = 0;
 						printf("Selection: %ls\n", pszFilePath);
-						wcstombs_s(&sz, buffer, 1024, pszFilePath, wcslen(pszFilePath));
+						//wcstombs_s(&sz, buffer, 1024, pszFilePath, wcslen(pszFilePath));
 						CoTaskMemFree(pszFilePath);
-						*result = std::string(buffer);
+						*result = std::wstring(pszFilePath);
 						return true;
 					}
 					item->Release();
