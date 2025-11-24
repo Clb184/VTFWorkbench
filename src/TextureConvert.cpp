@@ -290,7 +290,7 @@ bool TextureConvert::LoadTextureFromFile(const std::wstring& filename) {
 		wprintf(L"Image %s opened\n", filename.c_str());
 		image.seekg(0, std::ios::end);
 		sz = image.tellg(); // Get size in bytes to allocate
-		printf("tellg returned %u\n", sz);
+		printf("tellg returned %zu\n", sz);
 		image.seekg(0, std::ios::beg);
 		file_data = (uint8_t*)calloc(sz, 1);
 

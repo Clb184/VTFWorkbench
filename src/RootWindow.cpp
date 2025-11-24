@@ -21,12 +21,12 @@ RootWindow::RootWindow(float width, float height)
 RootWindow::~RootWindow() {
 	printf("Destroying Root Window contents\n");
 
-	printf("Destroying %d Texture Convert instances\n", m_CvtInstances.size());
+	printf("Destroying %zu Texture Convert instances\n", m_CvtInstances.size());
 	for(auto& texconv : m_CvtInstances) {
 		texconv.SetDelete();
 	}
 
-	printf("Destroying %d Material Constructor instances\n", m_MatCInstances.size());
+	printf("Destroying %zu Material Constructor instances\n", m_MatCInstances.size());
 	for(auto& matc : m_MatCInstances) {
 
 	}
@@ -212,7 +212,7 @@ void RootWindow::MoveTexConvert() {
 	for (size_t i = 0; i < m_CvtInstances.size(); i++) {
 		// Delete from list if closes
 		if(!m_CvtInstances[i].Move()) {
-			printf("Erasing CVT instance at %d\n", i);
+			printf("Erasing CVT instance at %zu\n", i);
 			m_CvtInstances[i].SetDelete();
 			m_CvtInstances.erase(m_CvtInstances.begin() + i);
 			RemoveTextureFromOutputs(i + 1);
@@ -225,7 +225,7 @@ void RootWindow::MoveMaterialConstructors() {
 	for (size_t i = 0; i < m_MatCInstances.size(); i++) {
 		// Delete from list if closes
 		if(!m_MatCInstances[i].Move()) {
-			printf("Erasing MATC instance at %d\n", i);
+			printf("Erasing MATC instance at %zu\n", i);
 			//m_MatcInstances[i].SetDelete();
 			m_MatCInstances.erase(m_MatCInstances.begin() + i);
 			RemoveMaterialFromOutputs(i);
@@ -264,10 +264,10 @@ void RootWindow::MoveMaterialOutputs() {
 		// Texture select
 		ImGui::SetNextItemWidth(96.0f);
 		std::string texture = outp.base_texture > 0 ? m_CvtInstances[outp.base_texture - 1].GetTextureName() : "<null>";
-		sprintf_s(buff, 64, "Tex##%d", i);
+		sprintf_s(buff, 64, "Tex##%zu", i);
 		if(ImGui::BeginCombo(buff, texture.c_str())) {
 			bool selected = outp.base_texture == 0;
-			sprintf_s(buff, 64, "<null>##%d", i);
+			sprintf_s(buff, 64, "<null>##%zu", i);
 			if(ImGui::Selectable(buff, selected)) {
 				outp.base_texture = 0;
 			}
@@ -283,7 +283,7 @@ void RootWindow::MoveMaterialOutputs() {
 
 		// Material template select
 		ImGui::SetNextItemWidth(96.0f);
-		sprintf_s(buff, 64, "Mat##%d", i);
+		sprintf_s(buff, 64, "Mat##%zu", i);
 		if(ImGui::BeginCombo(buff, m_MatCInstances.size() > 0 ? m_MatCInstances[outp.template_material].GetMaterialName().c_str() : "<null>")) {
 			for(size_t j = 0; j < m_MatCInstances.size(); j++){
 				bool selected = (outp.template_material) == j;
@@ -324,7 +324,7 @@ void RootWindow::OpenTextureDialog() {
 	filter.pszSpec = L"*.png; *.jpg; *.tga; *.bmp";
 
 	on_success = CreateMultiSelectDialogWindows(&filter, 1, &tex_names);
-	printf("Received %d texture names\n", tex_names.size());
+	printf("Received %zu texture names\n", tex_names.size());
 #endif
 	if(false == on_success) return;
 
@@ -332,7 +332,7 @@ void RootWindow::OpenTextureDialog() {
 		printf("Load texture\n");
 #pragma message("On TexConvert vector")
 		m_CvtInstances.emplace_back(m_TexConvID, tex.c_str());
-		printf("Added texconvert instance at %d with ID %d\n",
+		printf("Added texconvert instance at %zu with ID %d\n",
 			m_CvtInstances.size() -1,
 			m_TexConvID
 			);
@@ -355,7 +355,7 @@ void RootWindow::OpenMaterialTemplateDialog() {
 	for(auto& mat : mat_names){
 		printf("Load material template\n");
 		m_MatCInstances.emplace_back(m_MatConstID, mat.c_str());
-		printf("Added materialconst instance at %d with ID %d\n",
+		printf("Added materialconst instance at %zu with ID %d\n",
 		  	m_MatCInstances.size() -1,
 			m_MatConstID
 			);
@@ -406,14 +406,14 @@ void RootWindow::LoadMaterialPreset() {
 	
 }
 
-void RootWindow::RemoveTextureFromOutputs(int id) {
+void RootWindow::RemoveTextureFromOutputs(size_t id) {
 	for(auto& o : m_OutputsList) {
 		o.base_texture -= (o.base_texture >= id);
 		if(o.base_texture < 0) o.base_texture = 0;
 	}
 }
 
-void RootWindow::RemoveMaterialFromOutputs(int id) {
+void RootWindow::RemoveMaterialFromOutputs(size_t id) {
 	for(auto& o : m_OutputsList) {
 		o.template_material -= (o.template_material >= id);
 		if(o.template_material < 0) o.template_material = 0;

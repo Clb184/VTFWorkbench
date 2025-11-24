@@ -38,8 +38,8 @@ private:
 	
 	void CheckCreateMissingPath();
 
-	void RemoveTextureFromOutputs(int id);
-	void RemoveMaterialFromOutputs(int id);
+	void RemoveTextureFromOutputs(size_t id);
+	void RemoveMaterialFromOutputs(size_t id);
 
 	void OpenProject();
 	void SaveProject();
