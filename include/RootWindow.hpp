@@ -7,7 +7,7 @@
 #include <vector>
 #include <filesystem>
 
-#define VTFW_VERSION "1.0.3"
+#define VTFW_VERSION "1.1.0"
 
 struct output_vmt_t {
 	std::string name;
