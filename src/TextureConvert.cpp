@@ -245,7 +245,7 @@ void TextureConvert::SaveFile(const std::filesystem::path& base_path) {
 			RootWindow::CheckCreateMissingBasePath();
 			
 			// Join and make the final file path
-			std::filesystem::path path = RootWindow::GetBasePath() / RootWindow::GetMaterialPath / std::filesystem::path(m_OutputName + ".vtf");
+			std::filesystem::path path = RootWindow::GetBasePath() / RootWindow::GetMaterialPath() / std::filesystem::path(m_OutputName + ".vtf");
 			printf("Path is: %s\n", path.string().c_str());
 			printf("Filename is %s\n", path.filename().string().c_str());
 
