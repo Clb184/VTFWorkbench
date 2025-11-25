@@ -9,7 +9,7 @@
 
 #include "GLFW/glfw3.h"
 
-#define VTFW_VERSION "1.1.0"
+#define VTFW_VERSION "1.2.0"
 
 struct output_vmt_t {
 	std::string name;
