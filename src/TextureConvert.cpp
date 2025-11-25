@@ -230,23 +230,26 @@ void TextureConvert::SetTextureFormat(int format) {
 
 void TextureConvert::SaveFile(const std::filesystem::path& base_path) {
 	if(nullptr != m_pPixelData) {
+		// Normalize as remove any blank space before and after the text,
+		// if there's nothing, skip
 		NormalizeString(&m_OutputName);
 		if(m_OutputName == "") return;
+
+		// Set image format and create the VTF file
 		m_CreateOptions.ImageFormat = ID2Format(m_TextureFormat);
 		bool created = m_VTFFile.Create(m_Width, m_Height, m_pPixelData, m_CreateOptions);
 		if(created) {
 			printf("Converted to VTF (Format: %d)\n", ID2Format(m_TextureFormat));
-			std::filesystem::path path = base_path / (m_OutputName + ".vtf");
-			std::filesystem::path parent = path.parent_path();
+			
+			// Check for the material path
+			RootWindow::CheckCreateMissingBasePath();
+			
+			// Join and make the final file path
+			std::filesystem::path path = RootWindow::GetBasePath() / RootWindow::GetMaterialPath / std::filesystem::path(m_OutputName + ".vtf");
 			printf("Path is: %s\n", path.string().c_str());
-			printf("Parent directory is %s\n", parent.string().c_str());
 			printf("Filename is %s\n", path.filename().string().c_str());
-			if(parent.string() != ""){
-				if(!std::filesystem::exists(parent)){
-					printf("Path %s doesn't exist, creating it\n", path.parent_path().string().c_str());
-					std::filesystem::create_directories(path.parent_path());
-				}
-			}
+
+			// Save file
 			if(m_VTFFile.Save(path.string().c_str())) {
 				printf("Saving converted VTF file\n");
 			} else {

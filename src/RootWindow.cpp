@@ -8,6 +8,11 @@
 std::string RootWindow::m_BasePath;
 std::string RootWindow::m_MaterialPath;
 
+void DropFileProc(GLFWwindow* window, int cnt, const char* paths[]) {
+	RootWindow* root_window = (RootWindow*)glfwGetWindowUserPointer(window);
+	root_window->HandleDroppedFiles(cnt, paths);
+}
+
 RootWindow::RootWindow(float width, float height) 
 	: m_Width(width), m_Height(height) 
 {
@@ -145,6 +150,42 @@ void RootWindow::Move() {
 
 }
 
+void RootWindow::HandleDroppedFiles(int cnt, const char* paths[]) {
+	// Extensions to check for
+	const wchar_t* image_exts[] = {
+		L".bmp",
+		L".png",
+		L".jpg",
+		L".tga",
+	};
+	const wchar_t* mat_template = L".json";
+	
+	// Handle each file
+	for(int f = 0; f < cnt; f++) {
+		size_t size = 0;
+		wchar_t buffer[2048] = L"";
+#ifdef WIN32
+		MultiByteToWideChar(CP_UTF8, 0, paths[f], -1, buffer, 2048);
+#endif
+		wprintf(L"Identifying file %s...\n", buffer);
+		std::filesystem::path file(buffer);
+		std::wstring ext = file.extension().wstring();
+		bool identified = false;
+		for(int i = 0; i < 4; i++) {
+			if(ext == image_exts[i]) {
+				LoadTextureFromFile(buffer);
+				identified = true;
+			}
+		}
+		if(false == identified && ext == mat_template) {
+			LoadMaterialTemplateFromFile(buffer);
+			identified = true;
+		}
+	}
+}
+
+
+
 const std::filesystem::path RootWindow::GetBasePath() {
 	NormalizeString(&m_BasePath);
 	return m_BasePath;
@@ -191,7 +232,7 @@ void RootWindow::MoveBaseVars() {
 		NormalizeString(&m_MaterialPath);
 		if(m_MatCInstances.size() > 0) {
 			printf("Creating all materials\n");
-			CheckCreateMissingPath();
+			CheckCreateMissingBasePath();
 			for(auto& out : m_OutputsList){
 				SaveMaterial(out);
 			}
@@ -201,7 +242,7 @@ void RootWindow::MoveBaseVars() {
 	if(ImGui::Button("Save all")) {
 		NormalizeString(&m_BasePath);
 		NormalizeString(&m_MaterialPath);
-		CheckCreateMissingPath();
+		CheckCreateMissingBasePath();
 		for(auto& cvt : m_CvtInstances){
 			cvt.SaveFile(std::filesystem::path(m_BasePath) / std::filesystem::path(m_MaterialPath));
 		}
@@ -316,7 +357,7 @@ void RootWindow::MoveMaterialOutputs() {
 		
 		// Save	material
 		if(ImGui::Button(save_this.c_str())){
-			CheckCreateMissingPath();
+			CheckCreateMissingBasePath();
 			SaveMaterial(outp);
 		}
 		ImGui::EndGroup();
@@ -339,14 +380,7 @@ void RootWindow::OpenTextureDialog() {
 	if(false == on_success) return;
 
 	for(auto& tex : tex_names) {
-		printf("Load texture\n");
-#pragma message("On TexConvert vector")
-		m_CvtInstances.emplace_back(m_TexConvID, tex.c_str());
-		printf("Added texconvert instance at %zu with ID %d\n",
-			m_CvtInstances.size() -1,
-			m_TexConvID
-			);
-		m_TexConvID++;
+		LoadTextureFromFile(tex.c_str());
 	}
 }
 
@@ -363,13 +397,7 @@ void RootWindow::OpenMaterialTemplateDialog() {
 	if(false == on_success) return;
 	
 	for(auto& mat : mat_names){
-		printf("Load material template\n");
-		m_MatCInstances.emplace_back(m_MatConstID, mat.c_str());
-		printf("Added materialconst instance at %u with ID %d\n",
-		  	m_MatCInstances.size() -1,
-			m_MatConstID
-			);
-		m_MatConstID++;
+		LoadMaterialTemplateFromFile(mat.c_str());
 	}
 }
 
@@ -397,7 +425,7 @@ bool RootWindow::SaveMaterial(const output_vmt_t& output) {
 	return false;
 }
 
-void RootWindow::CheckCreateMissingPath() {
+void RootWindow::CheckCreateMissingBasePath() {
 	std::filesystem::path target = std::filesystem::path(m_BasePath) / std::filesystem::path(m_MaterialPath);
 	if(target.string() == "") {
 		printf("Path not specified, skipping\n");
@@ -412,8 +440,24 @@ void RootWindow::CheckCreateMissingPath() {
 	}
 }
 
-void RootWindow::LoadMaterialPreset() {
-	
+void RootWindow::LoadTextureFromFile(const wchar_t* filename) {
+	printf("Load texture\n");
+	m_CvtInstances.emplace_back(m_TexConvID, filename); 
+	printf("Added texconvert instance at %zu with ID %d\n",
+		m_CvtInstances.size() -1,
+		m_TexConvID
+		);
+	m_TexConvID++;
+}
+
+void RootWindow::LoadMaterialTemplateFromFile(const wchar_t* filename) {
+	printf("Load material template\n");
+	m_MatCInstances.emplace_back(m_MatConstID, filename);
+	printf("Added materialconst instance at %u with ID %d\n",
+	  	m_MatCInstances.size() -1,
+		m_MatConstID
+		);
+	m_MatConstID++;
 }
 
 void RootWindow::RemoveTextureFromOutputs(size_t id) {

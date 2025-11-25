@@ -62,6 +62,9 @@ void MaterialConstructor::SaveFile(const std::string& texture_name, const std::s
 
 	// Start with the shader type name "VertexLitGeneric" or so
 	ret = "\"" + m_ShaderType + "\" {\n";
+	
+	// Make sure this base path exists
+	RootWindow::CheckCreateMissingBasePath();
 
 	// I only do this for some kind of trying to get things right
 	std::filesystem::path tex_path = RootWindow::GetMaterialPath() / std::filesystem::path(texture_name);
@@ -164,30 +167,37 @@ void MaterialConstructor::DrawAddButtons() {
 	// To add values of different kinds
 	if(ImGui::Button("Add integer")) {
 		m_Nodes.emplace_back(NODE_INTEGER);
+		printf("Added integer item\n");
 	}
 	ImGui::SameLine();
 	if(ImGui::Button("Add float")) {
 		m_Nodes.emplace_back(NODE_FLOAT);
+		printf("Added float item\n");
 	}
 	ImGui::SameLine();
 	if(ImGui::Button("Add float2")) {
 		m_Nodes.emplace_back(NODE_FLOAT2);
+		printf("Added float2 item\n");
 	}
 	ImGui::SameLine();
 	if(ImGui::Button("Add float3")) {
 		m_Nodes.emplace_back(NODE_FLOAT3);
-	}
-	//ImGui::SameLine();
-	if(ImGui::Button("Add float4")) {
-		m_Nodes.emplace_back(NODE_FLOAT4);
+		printf("Added float3 item\n");
 	}
 	ImGui::SameLine();
+	if(ImGui::Button("Add float4")) {
+		m_Nodes.emplace_back(NODE_FLOAT4);
+		printf("Added float4 item\n");
+	}
+	//ImGui::SameLine();
 	if(ImGui::Button("Add string")) {
 		m_Nodes.emplace_back(NODE_STRING);
+		printf("Added string item\n");
 	}
 	ImGui::SameLine();
 	if(ImGui::Button("Add color")) {
 		m_Nodes.emplace_back(NODE_COLOR);
+		printf("Added color item\n");
 	}
 	ImGui::EndGroup();
 	//ImGui::SameLine();
@@ -198,9 +208,14 @@ void MaterialConstructor::DrawNodeValues() {
 	for(size_t i = 0; i < m_Nodes.size(); i++){
 		std::string name = "##name" + std::to_string(i);
 		std::string value = "##value" + std::to_string(i);
+		std::string del_this = "Rem##" + std::to_string(i);
+		
+		// Item name
 		ImGui::SetNextItemWidth(96.0f);
 		ImGui::InputText(name.c_str(), &m_Nodes[i].name);
 		ImGui::SameLine();
+
+		// Display value
 		switch(m_Nodes[i].type){
 			case NODE_INTEGER: ImGui::InputInt(value.c_str(), &m_Nodes[i].integer); break;
 			case NODE_FLOAT: ImGui::InputFloat(value.c_str(), &m_Nodes[i].single); break;
@@ -209,6 +224,14 @@ void MaterialConstructor::DrawNodeValues() {
 			case NODE_FLOAT4: ImGui::InputFloat4(value.c_str(), m_Nodes[i].float4); break;
 			case NODE_COLOR: ImGui::ColorEdit4(value.c_str(), m_Nodes[i].float4); break;
 			case NODE_STRING: ImGui::InputText(value.c_str(), &m_Nodes[i].string); break;
+		}
+		ImGui::SameLine();
+		
+		// Remove item
+		if(ImGui::Button(del_this.c_str())) {
+			m_Nodes.erase(m_Nodes.begin() + i);
+			printf("Removed material constructor item at pos %d\n", i);
+			i--;
 		}		
 	}
 	ImGui::EndGroup();
@@ -246,9 +269,11 @@ bool MaterialConstructor::LoadFromJSON(nlohmann::json& js) {
 			std::array<float, 2> ps = js["pos"];
 			m_X = ps[0];
 			m_Y = ps[1];
-		} else {
-			printf("Pos key not founf, it will be created when you save the project\n");
 		}
+		// Might not be needed anyway
+	       	/*else {
+			printf("Pos key not found, it will be created when you save the project\n");
+		}*/
 			
 		auto& body = js["body"];
 		for(nlohmann::json::iterator it = js["body"].begin(); it != js["body"].end(); it++){

@@ -7,6 +7,8 @@
 #include <vector>
 #include <filesystem>
 
+#include "GLFW/glfw3.h"
+
 #define VTFW_VERSION "1.1.0"
 
 struct output_vmt_t {
@@ -15,36 +17,53 @@ struct output_vmt_t {
 	int template_material = 0;
 };
 
+void DropFileProc(GLFWwindow* window, int cnt, const char* paths[]);
+
 class RootWindow {
 public:
 	RootWindow(float width, float height);
 	~RootWindow();
 
+	// Logic
 	void Move();
+	void HandleDroppedFiles(int cnt, const char* paths[]);
+
+	// Manage paths
 	static const std::filesystem::path GetBasePath();
 	static const std::filesystem::path GetMaterialPath();
+	static void CheckCreateMissingBasePath();
+
 private:
+	// Move the path and outputs mixer
 	void MoveBaseVars();
-	void MoveTexConvert();
-	void MoveMaterialConstructors();
 	void MoveMaterialOutputs();
 
+	// Move the texture and material windows
+	void MoveTexConvert();
+	void MoveMaterialConstructors();
+
+	// Texture convert menu
 	void OpenTextureDialog();
-	void OpenMaterialTemplateDialog();
-
-	void CreateMaterialConstructor();
-	void LoadMaterialPreset();
-	bool SaveMaterial(const output_vmt_t& output);
 	
-	void CheckCreateMissingPath();
+	// Material template menu	
+	void OpenMaterialTemplateDialog();
+	void CreateMaterialConstructor();
 
+	// Manage material outputs
+	bool SaveMaterial(const output_vmt_t& output);
 	void RemoveTextureFromOutputs(size_t id);
 	void RemoveMaterialFromOutputs(size_t id);
-
+	
+	// Manage project
 	void OpenProject();
 	void SaveProject();
-
 	void ClearWorkspace();
+
+	// Load stuff from file
+	void LoadTextureFromFile(const wchar_t* filename);
+	void LoadMaterialTemplateFromFile(const wchar_t* filename);
+	//void LoadProjectFromFile(const wchar_t* ); Might screw up work, so I'm not gonna consider it
+
 private:
 	bool m_bOpenFirstTime;
 	float m_XPath, m_YPath;

@@ -5,6 +5,23 @@
 #include "GL/glew.h"
 #include "glfw/glfw3.h"
 #include "RootWindow.hpp"
+#include <fstream>
+#include <string>
+
+void TestDropPath(GLFWwindow* window, int count, const char* paths[]) {
+	std::wofstream path_out("test_output_path.txt", std::ios::out);
+	if(path_out.is_open()) {
+		for(int i = 0; i < count; i++) {
+			size_t size;
+			wchar_t buffer[1024] = L"";
+			mbstowcs_s(&size, buffer, 1024, paths[i], 1024);
+			path_out << buffer << L"\n";
+			wprintf(L"Path %s dropped into window\n", buffer);
+			std::filesystem::path path(buffer);
+			wprintf(L"Filename: %s, Extension: %s", path.filename().wstring().c_str(), path.extension().wstring().c_str());
+		}
+	}
+}
 
 int main() {
 	
@@ -17,16 +34,18 @@ int main() {
 	       	return -1;
 	}
 
-	// Setup for GL 4.5
+	// Setup for GL 3.3
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	//glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+	
+	// Set size of 720p
 	int winw = 1280, winh = 720;
 	// Create window
 	printf("Creating GLFWwindow\n");
 	GLFWwindow* window = glfwCreateWindow(winw, winh, "VTF Workbench", NULL, NULL);
 	if(nullptr == window) { std::cout << "Failed creating window\n"; return -1; }
+	glfwSetDropCallback(window, DropFileProc);
 
 	glfwMakeContextCurrent(window);
 
@@ -63,6 +82,12 @@ int main() {
 	printf("Initializing VTFLib\n");
 	vlInitialize();
 	RootWindow* root_window = new RootWindow((float)winw, (float)winh);
+	if(nullptr == root_window) {
+		glfwDestroyWindow(window);
+		glfwTerminate();
+		return -1;
+	}
+	glfwSetWindowUserPointer(window, root_window);
 	while(!glfwWindowShouldClose(window)){
 		// Process messages, we wait since we don't really do any animations
 		glfwWaitEvents();
