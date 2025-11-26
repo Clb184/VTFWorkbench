@@ -1,11 +1,11 @@
 # VTF Workbench
 
 A tool for converting certain textures to VTF, and create VMTs using templates.
-Currently only working for Windows while I look for an alternative/equivalent for Linux.
+Currently only working for Windows while I look for an alternative/equivalent of VTFLib for Linux.
 
 ## What's this for?
 As said earlier, converting textures to VTF, and linking them with the before-mentioned templates to generate VMTs.
-You can export all textures at once to the desired path (Which is base path + material path) or do it one by one, same for material outputs
+You can export all textures at once to the desired path (Which is base path + material path) or do it one by one, same for material outputs.
 
 ## Why you made this?
 Because I have a very repetitive workflow on the material creation stage, I usually copy-pasted a lot of past made materials and edited them with the new textures, and that was a tedious job to do.
