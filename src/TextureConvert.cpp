@@ -120,6 +120,7 @@ bool TextureConvert::Move() {
 	bool is_open = true;
 	if(m_bFirstTime) {
 		ImGui::SetNextWindowPos({m_X, m_Y});
+		ImGui::SetNextWindowSize({551.0f, 337.0f});
 		m_bFirstTime = false;
 	}
 	ImGui::Begin(m_InternalName.c_str(), &is_open, ImGuiWindowFlags_NoSavedSettings);
@@ -152,7 +153,7 @@ bool TextureConvert::Move() {
 	ImGui::Text("%ls", m_InputName.c_str());
 	ImGui::InputText("##output_image", &m_OutputName);
 	ImGui::SameLine();
-	if(ImGui::Button("Save file")){
+	if(ImGui::Button("Export texture")){
 		SaveFile(RootWindow::GetBasePath() / RootWindow::GetMaterialPath());
 	}
 	ImGui::EndGroup();
@@ -237,6 +238,7 @@ void TextureConvert::SaveFile(const std::filesystem::path& base_path) {
 
 		// Set image format and create the VTF file
 		m_CreateOptions.ImageFormat = ID2Format(m_TextureFormat);
+		printf("Attempting to create image\n");
 		bool created = m_VTFFile.Create(m_Width, m_Height, m_pPixelData, m_CreateOptions);
 		if(created) {
 			printf("Converted to VTF (Format: %d)\n", ID2Format(m_TextureFormat));
@@ -370,6 +372,7 @@ bool TextureConvert::LoadTextureFromFile(const std::wstring& filename) {
 	m_Height = h;
 	m_TextureID = tex;
 	
+	// Try to default to some kind of name
 	size_t size = filename.length();
 	int start = 0;
 	for(size_t i = 0; i < size; i++){
@@ -381,11 +384,31 @@ bool TextureConvert::LoadTextureFromFile(const std::wstring& filename) {
 	for(int i = size - 1; i > start; i--) {
 		if(filename.at(i) == '.') {
 			for(int c = start; c < i; c++){
-				m_OutputName.push_back(filename.at(c));
+				wchar_t ch = filename.at(c);
+				if(
+					ch >= L'a' && ch <= L'z' ||
+				       	ch >= L'A' && ch <= L'Z' ||
+					ch >= L'0' && ch <= L'9' ||
+					ch == L'-' ||
+					ch == L' ' ||
+				       	ch == L'_'
+					) {
+				       	
+					//printf("Adding char %x\n", filename.at(c));
+					m_OutputName.push_back(filename.at(c));
+				}
 			}
 			break;
 		}
 	}
+	
+	printf("Size of output_name: %d\n", m_OutputName.length());
+	for(auto& c : m_OutputName) {
+		printf("%00x ", c);
+	}
+	printf("\n");
+
+	// Path to display
 	m_InputName = filename;
 	return true;
 }

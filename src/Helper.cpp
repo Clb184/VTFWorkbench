@@ -2,16 +2,19 @@
 
 
 void NormalizeString(std::string* string) {
+	//printf("Normalizing string at 0x%p\n", string);
 	while(string->length()){
-			char c = string->at(0);
-			if(!(c == ' ' || c == '\t')){ break; }
-			string->erase(string->begin());
-		}
-	for(size_t i = string->length() - 1; i > 0; i--){
+		char c = string->at(0);
+		if(!(c == ' ' || c == '\t')){ break; }
+		string->erase(string->begin());
+	}
+	//printf("Now from the other side\n");
+	for(int i = string->length() - 1; i > 0; i--){
 		char c = string->at(i);
 		if(!(c == ' ' || c == '\t')){ break; }
 		string->pop_back();
 	}
+	//printf("Finished normalizing string\n");
 }
 
 bool CreateSingleSelectDialogWindows(COMDLG_FILTERSPEC* filter_data, int filter_cnt, std::wstring* result) {
