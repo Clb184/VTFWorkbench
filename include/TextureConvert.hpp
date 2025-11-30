@@ -13,26 +13,29 @@
 // Texture convert window and its contents
 class TextureConvert {
 public:
+	// Constructors and Destructor
 	TextureConvert(int id);
 	TextureConvert(int id, const wchar_t* filename);
 	~TextureConvert();
 
+	// Default stuff
 	bool Move();
 	void SetDelete();
 	void SaveFile(const std::filesystem::path& base_path);
 
+	// Get some stuff
 	const std::wstring GetTextureSource() const;
 	void SetTextureName(const std::string& name);
 	const std::string GetTextureName() const;
-	
 	int GetTextureFlags();
 	int GetTextureFormat();
 	void SetTextureFlags(int flags);
 	void SetTextureFormat(int format);
+	void SetWindowPosition(float pos[2]);
 	
+	// A quick format to save info in the savefile
 	void AsJSON(nlohmann::json* out);
 
-	void SetWindowPosition(float pos[2]);
 private:
 	bool LoadTextureFromFile(const std::wstring& filename);
 
